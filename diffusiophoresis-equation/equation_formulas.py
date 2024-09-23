@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-class Equations:
+class Equation_Formulas:
     def __init__(self) -> None:
         """
         Initializes the Equations class and defines constants.
