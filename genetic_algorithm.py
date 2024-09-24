@@ -3,7 +3,7 @@ import concurrent.futures
 import random
 
 class GeneticAlgorithm:
-    def __init__(self, generations, population_size):
+    def __init__(self, generations, population_size, crossover_rate, mutation_rate):
         """
         Initialize the Genetic Algorithm.
 
@@ -19,6 +19,8 @@ class GeneticAlgorithm:
         """
         self.generations = generations
         self.population_size = population_size
+        self.crossover_rate = crossover_rate
+        self.mutation_rate = mutation_rate
         self.population = []
         self.best_equation = None
     
@@ -135,7 +137,14 @@ class GeneticAlgorithm:
         Returns:
             child: The newly generated equation after crossover.
         """
-        pass
+        if np.random.rand() > self.crossover_rate:
+            if np.random.rand() > 0.5:
+                #average population
+                pass
+            else:
+                #single point
+                pass
+        return parent1
 
     def mutate(self, child):
         """
@@ -152,6 +161,7 @@ class GeneticAlgorithm:
         Returns:
             mutated_child: The mutated equation.
         """
+        if np.random.rand() < self.mutation_rate:
         pass
 
     def evaluate_population_fitness(self, population):
@@ -188,4 +198,4 @@ class GeneticAlgorithm:
         Returns:
             fitness_score: A numeric score representing the fitness of the equation.
         """
-        pass
+        return (equation.flow_rate() * equation.exclusion_zone_area())
