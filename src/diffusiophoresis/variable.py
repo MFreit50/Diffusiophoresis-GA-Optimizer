@@ -114,3 +114,56 @@ class Variable:
             True if the value is within the range [min_range, max_range], False otherwise.
         """
         return self.min_range <= value <= self.max_range
+    
+    def to_dict(self) -> dict:
+        """
+        Converts the Variable object to a dictionary representation.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the variable's name, value, constant state, 
+            and range (min_range, max_range).
+        """
+        return {
+            "variable_name": self.variable_name,
+            "value": self.value,
+            "is_constant": self.is_constant,
+            "min_range": self.min_range,
+            "max_range": self.max_range
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """
+        Creates a Variable object from a dictionary representation.
+
+        Parameters
+        ----------
+        data : dict
+            A dictionary containing the variable's name, value, constant state, 
+            and range (min_range, max_range).
+
+        Returns
+        -------
+        Variable
+            A Variable object initialized with the values from the dictionary.
+        """
+        return cls(
+            variable_name=data["variable_name"],
+            value=data["value"],
+            is_constant=data["is_constant"],
+            min_range=data["min_range"],
+            max_range=data["max_range"]
+        )
+    def __str__(self):
+        """
+        Returns a string representation of the Variable object.
+
+        Returns
+        -------
+        str
+            A string describing the variable's name, value, constant state, and range.
+        """
+        constant_status = "Constant" if self.is_constant else "Variable"
+        return f"{self.variable_name}: {self.value} [{self.min_range}, {self.max_range}] ({constant_status})"
