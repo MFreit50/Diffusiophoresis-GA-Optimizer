@@ -25,9 +25,12 @@ class Equation():
         variable = self.get_variable(name)
         variable.set_value(value)
     
-    def get_variable_names_list(self) -> list:
-        return list(self.variables)
-
+    def get_variable_list(self) -> list:
+        variable_list : list = []
+        for _, variable in self.variables.items():
+            variable_list.append(variable)
+        return variable
+    
     def randomize_equation(self) -> None:
         for _, variable in self.variables.items():
             variable.randomize()
