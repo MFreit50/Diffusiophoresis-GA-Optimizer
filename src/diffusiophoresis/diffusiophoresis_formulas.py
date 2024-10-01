@@ -132,6 +132,18 @@ class DiffusiophoresisFormulas:
         reynolds_number = (density * velocity * characteristic_length) / dynamic_viscosity
         return reynolds_number
 
+    @staticmethod
+    def channel_area(height, length):
+        return height * length
+    
+    @staticmethod
+    def characteristic_length(height, length):
+        #hydraulic diameter is characteristic length for rectangles
+        area_rectangle = height * length
+        perimeter_rectangle = 2*(height+length)
+        hydraulic_diameter = (4 * area_rectangle)/perimeter_rectangle
+        return hydraulic_diameter
+    
     # Private methods
     @staticmethod
     def _convert_variables(channel_height, channel_length, mean_flow_velocity, diffusiophoretic_velocity) -> tuple:
