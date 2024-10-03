@@ -27,10 +27,10 @@ class Equation():
     def get_value(self, name) -> float:
         return self.get_variable(name).value
     
-    def set_value(self, name, value) -> None:
+    def set_value(self, name, value, safe_mode=False) -> None:
         #raises error if variable is constant
         variable = self.get_variable(name)
-        variable.set_value(value)
+        variable.set_value(value, safe_mode)
     
     def get_variable_list(self) -> list:
         variable_list : list = []
@@ -49,7 +49,7 @@ class Equation():
     
     def get_exlcusion_zone_area(self):
         if self.has_variable("exclusion_zone_area"):
-            return self.get_value("exlcusion_zone_area")
+            return self.get_value("exclusion_zone_area")
         
         channel_height = self.get_value("channel_height")
         channel_length = self.get_value("channel_length")
