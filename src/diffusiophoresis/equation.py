@@ -43,6 +43,10 @@ class Equation():
             variable.randomize()
     
     #Calculations
+    def optimize(self):
+        #defines what this equation aims to optimize
+        return self.get_exlcusion_zone_area #*clean flow rate (not implemented)
+    
     def get_exlcusion_zone_area(self):
         if self.has_variable("exclusion_zone_area"):
             return self.get_value("exlcusion_zone_area")
