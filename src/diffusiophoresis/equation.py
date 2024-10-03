@@ -3,24 +3,31 @@ from diffusiophoresis.diffusiophoresis_formulas import DiffusiophoresisFormulas 
 
 class Equation():
     def __init__(self) -> None:
-        super().__init__()
         self.variables = {}
 
+    def get_index(self, index : int) -> Variable:
+        if 0 > index > len(self.variables):
+            length = len(self.variables)
+            raise IndexError("Index '{i}' out of range for dictionary of size '{length}'")
+        
+        variable_list : list = list(self.variables.values())
+        return variable_list[index]
+    
     def has_variable(self, name : str) -> bool:
         return name in self.variables
     
     def add_variable(self, variable : Variable):
         self.variables[variable.get_name()] = variable
 
-    def get_variable(self, name):
+    def get_variable(self, name) -> Variable:
         if name in self.variables:
             return self.variables[name]
         raise KeyError(f"Variable '{name}' not found in the equation")
     
-    def get_value(self, name):
+    def get_value(self, name) -> float:
         return self.get_variable(name).value
     
-    def set_value(self, name, value):
+    def set_value(self, name, value) -> None:
         #raises error if variable is constant
         variable = self.get_variable(name)
         variable.set_value(value)
@@ -119,3 +126,12 @@ class Equation():
         
         reynolds_number = formula.reynolds_number(fluid_density, fluid_velocity, characteristic_length, dynamic_viscosity)
         return reynolds_number < 500
+    
+    def __hash__(self) -> int:
+        sorted_vars = sorted(self.variables.items())#sort variables by name for consistent hashing
+        return hash(tuple((name, hash(var)) for name, var in sorted_vars))
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, Equation):
+            return self.variables == other.variables
+        return False

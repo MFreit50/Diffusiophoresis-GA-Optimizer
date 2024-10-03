@@ -115,6 +115,13 @@ class Variable:
         """
         return self.min_range <= value <= self.max_range
     
+    def __hash__(self) -> int:
+        return hash(self.variable_name, self.value, self.is_constant, self.min_range, self.max_range)
+
+    def __eq__(self, other) -> int:
+        if isinstance(other, Variable):
+            return self.variable_name == other.variable_name and self.value == other.value and self.is_constant == other.is_constant and self.min_range == other.min_range and self.max_range == other.max_range
+        
     def to_dict(self) -> dict:
         """
         Converts the Variable object to a dictionary representation.
