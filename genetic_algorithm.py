@@ -23,6 +23,8 @@ class GeneticAlgorithm:
         self.mutation_rate = mutation_rate
         self.population = []
         self.best_equation = None
+
+        self.cached_fitness = {}
     
     def run(self):
         """
@@ -162,7 +164,7 @@ class GeneticAlgorithm:
             mutated_child: The mutated equation.
         """
         if np.random.rand() < self.mutation_rate:
-        pass
+            pass
 
     def evaluate_population_fitness(self, population):
         """
@@ -198,4 +200,11 @@ class GeneticAlgorithm:
         Returns:
             fitness_score: A numeric score representing the fitness of the equation.
         """
-        return (equation.flow_rate() * equation.exclusion_zone_area())
+        if equation in self.cached_fitness:
+            return self.cached_fitness[equation]
+        
+        fitness = equation.optimize()
+        self.cached_fitness[equation] = fitness
+        
+        return fitness
+        
