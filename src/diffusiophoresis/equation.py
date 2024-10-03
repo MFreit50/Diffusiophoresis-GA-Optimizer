@@ -1,9 +1,9 @@
 from diffusiophoresis.variable import Variable
 from diffusiophoresis.diffusiophoresis_formulas import DiffusiophoresisFormulas as formula
-
+from diffusiophoresis.variable_definitions import VariableDefinitions
 class Equation():
     def __init__(self) -> None:
-        self.variables = {}
+        self.variables = VariableDefinitions.get_variables()
 
     def get_index(self, index : int) -> Variable:
         if 0 > index > len(self.variables):
