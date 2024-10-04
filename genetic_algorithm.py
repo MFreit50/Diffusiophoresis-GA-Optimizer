@@ -1,6 +1,7 @@
 import numpy as np
 import concurrent.futures
 import random
+from diffusiophoresis.equation import Equation
 
 class GeneticAlgorithm:
     def __init__(self, generations, population_size, crossover_rate, mutation_rate):
@@ -10,12 +11,17 @@ class GeneticAlgorithm:
         Args:
             generations (int): The number of generations to evolve the population.
             population_size (int): The number of individuals (equations) in the population.
-        
+            crossover_rate (float): The probability (0.0 to 1.0) that crossover will occur between two individuals during reproduction.
+            mutation_rate (float): The probability (0.0 to 1.0) that a mutation will occur in an individual's variables after crossover.
+
         Attributes:
-            generations (int): Stores the number of generations.
-            population_size (int): Stores the population size.
-            population (list): The current population of equations.
-            best_equation: The best solution found during evolution.
+            generations (int): The number of generations to evolve the population.
+            population_size (int): The number of individuals in the population.
+            crossover_rate (float): The likelihood that crossover will occur when generating offspring.
+            mutation_rate (float): The likelihood that mutation will occur in an offspring's variables.
+            population (list): The current population of equations (individuals) being evolved.
+            best_equation (Equation): The best solution (Equation) found during evolution based on fitness.
+            cached_fitness (dict): A cache that stores pre-calculated fitness scores of individuals for performance optimization.
         """
         self.generations = generations
         self.population_size = population_size
@@ -25,6 +31,7 @@ class GeneticAlgorithm:
         self.best_equation = None
 
         self.cached_fitness = {}
+
     
     def run(self):
         """
@@ -42,28 +49,12 @@ class GeneticAlgorithm:
 
     def initialize_population(self):
         """
-        Initialize the population with random equations.
+        Initialize the population by filling it with equations that contain randomized variables.
 
         This method fills the population with random equations created by the
         create_random_equation method.
         """
-        self.population = [self.create_random_equation() for _ in range(self.population_size)]
-    
-    def create_random_equation(self):
-        """
-        Create a random equation for initialization.
-
-        This method should generate a random equation based on the problem domain.
-        
-        Considerations:
-            - How to represent the equation (e.g., as a list of coefficients).
-            - What range of values the coefficients should take.
-            - Whether there are constraints on the equation format.
-        
-        Returns:
-            Randomly generated equation (to be defined based on the problem's representation).
-        """
-        pass
+        self.population = [Equation().randomize_equation() for _ in range(self.population_size)]
     
     def evolve(self):
         """
@@ -83,11 +74,11 @@ class GeneticAlgorithm:
 
             # Create a new population via selection, crossover, and mutation
             while len(new_population) < self.population_size:
-                parent1 = self.select_parents()
-                parent2 = self.select_parents()
-                child = self.crossover(parent1, parent2)
-                child = self.mutate(child)
-                new_population.append(child)
+                parent1, parent2 = self.select_parents() 
+                child1, child2 = self.crossover(parent1, parent2)
+                child1 = self.mutate(child1) 
+                child2 = self.mutate(child2)
+                new_population.append([child1, child2])
 
             # Evaluate the fitness of the new population
             fitness_results = self.evaluate_population_fitness(new_population)
@@ -110,7 +101,7 @@ class GeneticAlgorithm:
             print(f'\tMutation Rate: {self.mutation_rate:.3f}')
             print(f'\tUnique Fitness Scores: {unique_fitness_results}')
 
-    def select_parents(self):
+    def select_parents(self, method="tournament") -> tuple:
         """
         Select two parent equations from the population based on fitness.
 
@@ -119,13 +110,44 @@ class GeneticAlgorithm:
             - Parents should have a higher probability of being selected if they have higher fitness.
         
         Returns:
-            Parent equation: An equation selected for crossover.
+            tuple: Two equations selected for crossover.
         """
-        pass
 
-    def crossover(self, parent1, parent2):
+        parent1 = None
+        parent2 = None
+        if(method == "tournament"):
+            parent1, parent2 = self.tournament_selection(tournament_size=6)
+        else:
+            raise NotImplementedError("This selection method is either invalid or not implemented yet!")
+
+        return parent1, parent2
+
+    def tournament_selection(self, tournament_size: int) -> tuple:
         """
-        Perform crossover between two parent equations to produce a child.
+        Perform tournament selection to choose top individuals from a population
+
+        Args:
+            tournament_size: The number of individuals participating in the tournament
+
+        Returns: tuple: A tuple containing the selected individuals
+        """
+        
+        # First tournament
+        tournament_contestants1 = random.sample(self.population, tournament_size)
+        parent1 = max(tournament_contestants1, key=lambda individual: self.evaluate_fitness(individual))
+
+        #Remove the first parent from the population
+        population_without_parent1 = [individual for individual in self.population if individual != parent1]
+
+        #Second tournament
+        tournament_contestants2 = random.sample(population_without_parent1, tournament_size)
+        parent2 = max(tournament_contestants2, key=lambda individual: self.evaluate_fitness(individual))
+
+        return parent1, parent2     
+
+    def crossover(self, parent1, parent2, method="uniform"):
+        """
+        Perform crossover (recombination) between two parent equations to produce a child.
 
         Considerations:
             - How to combine the genetic material (equation components) from both parents.
@@ -139,16 +161,48 @@ class GeneticAlgorithm:
         Returns:
             child: The newly generated equation after crossover.
         """
-        if np.random.rand() > self.crossover_rate:
-            if np.random.rand() > 0.5:
-                #average population
-                pass
-            else:
-                #single point
-                pass
-        return parent1
 
-    def mutate(self, child):
+        if np.random.rand() < self.crossover_rate:
+            return parent1, parent2
+            
+        if(method == "uniform"): 
+            child1, child2 = self.uniform_crossover(parent1, parent2)
+            return child1, child2
+        else:
+            raise NotImplementedError("This crossover method is either invalid or not implemented yet!")
+
+    def uniform_crossover(parent1: Equation, parent2: Equation) -> tuple:
+        """
+        Perform uniform crossover between two parent Equation objects.
+
+        Args:
+            parent1 (Equation): The first parent individual.
+            parent2 (Equation): The second parent individual.
+
+        Returns:
+            child1, child2 (Equation, Equation): The two offspring created from the uniform crossover of the two parents.
+        """
+
+        parent1_vars = parent1.get_variable_list()
+        parent2_vars = parent2.get_variable_list()
+
+        # TODO: Debug: Check if both parents have the same variables for crossover
+
+        child1 = Equation()
+        child2 = Equation()
+
+        for i in range(len(parent1_vars)):
+            if np.random.rand() < 0.5:
+                child1.add_variable(parent1_vars[i])
+                child2.add_variable(parent2_vars[i])
+            else:
+                child1.add_variable(parent2_vars[i])
+                child2.add_variable(parent1_vars[i])
+
+        return child1, child2
+
+
+    def mutate(self, child, method="swap"):
         """
         Mutate a child equation to introduce variation.
 
@@ -163,8 +217,45 @@ class GeneticAlgorithm:
         Returns:
             mutated_child: The mutated equation.
         """
-        if np.random.rand() < self.mutation_rate:
-            pass
+
+        #TODO Have mutate() handle an input of an array of Equations
+
+        if np.random.rand() > self.mutation_rate:
+            return child
+        
+        if(method == "swap"):
+            child = self.swap_mutation(child)
+            return child
+        else:
+            raise NotImplementedError("This mutation method is either invalid or not implemented yet!")
+
+    def swap_mutation(child: Equation) -> Equation:
+        """
+        Perform swap mutation on the given equation and return a new mutated equation.
+
+        Args:
+            child (Equation): The equation object to mutate.
+
+        Returns:
+            Equation: A new equation object with swapped variable values.
+        """
+        mutated_child = Equation()
+        variable_list = child.get_variable_list()
+
+        index1, index2 = random.sample(range(len(variable_list)), 2)
+
+        variable1 = variable_list[index1]
+        variable2 = variable_list[index2]
+
+        for i, variable in enumerate(variable_list):
+            if i == index1:
+                mutated_child.add_variable(variable2)
+            elif i == index2:
+                mutated_child.add_variable(variable1);
+            else:
+                mutated_child.add_variable(variable)
+        
+        return mutated_child
 
     def evaluate_population_fitness(self, population):
         """
