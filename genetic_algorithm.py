@@ -201,7 +201,6 @@ class GeneticAlgorithm:
 
         return child1, child2
 
-
     def mutate(self, child, method="swap"):
         """
         Mutate a child equation to introduce variation.
@@ -251,7 +250,7 @@ class GeneticAlgorithm:
             if i == index1:
                 mutated_child.add_variable(variable2)
             elif i == index2:
-                mutated_child.add_variable(variable1);
+                mutated_child.add_variable(variable1)
             else:
                 mutated_child.add_variable(variable)
         
