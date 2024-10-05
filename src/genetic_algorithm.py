@@ -238,26 +238,21 @@ class GeneticAlgorithm:
         Returns:
             Equation: A new equation object with swapped variable values.
         """
-        mutated_child = Equation()
+        mutated_child = child
         variable_list = child.get_variable_list()
         variable_list = [variable for variable in variable_list if not variable.is_constant]#Filter out constant variables
 
         index1, index2 = random.sample(range(len(variable_list)), 2)
 
-        mutated_child.set_variable(index1)
-        mutated_child.set_variable(index2)
-        
-        return mutated_child
         variable1 = variable_list[index1]
         variable2 = variable_list[index2]
 
-        for i, variable in enumerate(variable_list):
-            if i == index1:
-                mutated_child.add_variable(variable2)
-            elif i == index2:
-                mutated_child.add_variable(variable1)
-            else:
-                mutated_child.add_variable(variable)
+        variable1_name = variable1.get_name()
+        variable2_name = variable2.get_name()
+        variable2_value = variable2.value #TODO change to getter function when it exists in Equation class
+
+        mutated_child.set_value(variable2_name, variable1.value)
+        mutated_child.set_value(variable1_name, variable2_value)
         
         return mutated_child
 
