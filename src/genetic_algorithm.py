@@ -4,7 +4,7 @@ import random
 from diffusiophoresis.equation import Equation
 
 class GeneticAlgorithm:
-    def __init__(self, generations, population_size, crossover_rate, mutation_rate):
+    def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float):
         """
         Initialize the Genetic Algorithm.
 
@@ -23,17 +23,17 @@ class GeneticAlgorithm:
             best_equation (Equation): The best solution (Equation) found during evolution based on fitness.
             cached_fitness (dict): A cache that stores pre-calculated fitness scores of individuals for performance optimization.
         """
-        self.generations = generations
-        self.population_size = population_size
-        self.crossover_rate = crossover_rate
-        self.mutation_rate = mutation_rate
-        self.population = []
-        self.best_equation = None
+        self.generations: int = generations
+        self.population_size: int = population_size
+        self.crossover_rate: float = crossover_rate
+        self.mutation_rate: float = mutation_rate
+        self.population: list = []
+        self.best_equation: Equation = None
 
-        self.cached_fitness = {}
+        self.cached_fitness: dict = {}
 
     
-    def run(self):
+    def run(self) -> Equation:
         """
         Run the genetic algorithm to evolve the population and find the best solution.
 
@@ -70,7 +70,7 @@ class GeneticAlgorithm:
             - Crossover and mutation methods need to be clearly defined to ensure meaningful offspring.
         """
         for generation in range(self.generations):
-            new_population = []
+            new_population: list = []
 
             # Create a new population via selection, crossover, and mutation
             while len(new_population) < self.population_size:
@@ -101,7 +101,7 @@ class GeneticAlgorithm:
             print(f'\tMutation Rate: {self.mutation_rate:.3f}')
             print(f'\tUnique Fitness Scores: {unique_fitness_results}')
 
-    def select_parents(self, method="tournament") -> tuple:
+    def select_parents(self, method:str="tournament") -> tuple:
         """
         Select two parent equations from the population based on fitness.
 
@@ -145,7 +145,7 @@ class GeneticAlgorithm:
 
         return parent1, parent2     
 
-    def crossover(self, parent1, parent2, method="uniform"):
+    def crossover(self, parent1: Equation, parent2: Equation, method:str="uniform") -> tuple:
         """
         Perform crossover (recombination) between two parent equations to produce a child.
 
@@ -201,7 +201,7 @@ class GeneticAlgorithm:
 
         return child1, child2
 
-    def mutate(self, child, method="swap"):
+    def mutate(self, child: Equation, method:str="swap") -> Equation:
         """
         Mutate a child equation to introduce variation.
 
@@ -256,7 +256,7 @@ class GeneticAlgorithm:
         
         return mutated_child
 
-    def evaluate_population_fitness(self, population):
+    def evaluate_population_fitness(self, population: list) -> list:
         """
         Evaluate the fitness of the entire population in parallel using multithreading.
 
@@ -273,7 +273,7 @@ class GeneticAlgorithm:
             fitness_results = list(executor.map(self.evaluate_fitness, population))
         return fitness_results
 
-    def evaluate_fitness(self, equation):
+    def evaluate_fitness(self, equation: Equation) -> float:
         """
         Evaluate the fitness of a single equation.
 
@@ -293,7 +293,7 @@ class GeneticAlgorithm:
         if equation in self.cached_fitness:
             return self.cached_fitness[equation]
         
-        fitness = equation.optimize()
+        fitness: float = equation.optimize()
         self.cached_fitness[equation] = fitness
         
         return fitness
