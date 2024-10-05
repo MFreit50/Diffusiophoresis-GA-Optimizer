@@ -78,7 +78,7 @@ class GeneticAlgorithm:
                 child1, child2 = self.crossover(parent1, parent2)
                 child1 = self.mutate(child1) 
                 child2 = self.mutate(child2)
-                new_population.append([child1, child2])
+                new_population.extend([child1, child2])
 
             # Evaluate the fitness of the new population
             fitness_results = self.evaluate_population_fitness(new_population)
@@ -171,7 +171,7 @@ class GeneticAlgorithm:
         else:
             raise NotImplementedError("This crossover method is either invalid or not implemented yet!")
 
-    def uniform_crossover(parent1: Equation, parent2: Equation) -> tuple:
+    def uniform_crossover(self, parent1: Equation, parent2: Equation) -> tuple:
         """
         Perform uniform crossover between two parent Equation objects.
 
@@ -228,7 +228,7 @@ class GeneticAlgorithm:
         else:
             raise NotImplementedError("This mutation method is either invalid or not implemented yet!")
 
-    def swap_mutation(child: Equation) -> Equation:
+    def swap_mutation(self, child: Equation) -> Equation:
         """
         Perform swap mutation on the given equation and return a new mutated equation.
 
@@ -240,9 +240,14 @@ class GeneticAlgorithm:
         """
         mutated_child = Equation()
         variable_list = child.get_variable_list()
+        variable_list = [variable for variable in variable_list if not variable.is_constant]#Filter out constant variables
 
         index1, index2 = random.sample(range(len(variable_list)), 2)
 
+        mutated_child.set_variable(index1)
+        mutated_child.set_variable(index2)
+        
+        return mutated_child
         variable1 = variable_list[index1]
         variable2 = variable_list[index2]
 
