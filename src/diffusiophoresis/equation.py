@@ -5,32 +5,37 @@ class Equation():
     def __init__(self) -> None:
         self.variables = VariableDefinitions.get_variables()
 
-    def get_index(self, index : int) -> Variable:
-        if 0 > index > len(self.variables):
-            length = len(self.variables)
-            raise IndexError("Index '{i}' out of range for dictionary of size '{length}'")
-        
-        variable_list : list = list(self.variables.values())
-        return variable_list[index]
-    
+
+
+    ##Utility Methods
     def has_variable(self, name : str) -> bool:
         return name in self.variables
     
     def add_variable(self, variable : Variable):
         self.variables[variable.get_name()] = variable
 
+    def randomize_equation(self) -> None:
+        for _, variable in self.variables.items():
+            variable.randomize()
+
+
+
+    ##Accessor Methods
+    def get_value(self, name) -> float:
+        return self.get_variable(name).value
+    
     def get_variable(self, name) -> Variable:
         if name in self.variables:
             return self.variables[name]
         raise KeyError(f"Variable '{name}' not found in the equation")
     
-    def get_value(self, name) -> float:
-        return self.get_variable(name).value
-    
-    def set_value(self, name, value, safe_mode=False) -> None:
-        #raises error if variable is constant
-        variable = self.get_variable(name)
-        variable.set_value(value, safe_mode)
+    def get_index(self, index : int) -> Variable:
+        if index < 0 or index > len(self.variables):
+            length = len(self.variables)
+            raise IndexError("Index '{i}' out of range for dictionary of size '{length}'")
+        
+        variable_list : list = list(self.variables.values())
+        return variable_list[index]
     
     def get_variable_list(self) -> list:
         variable_list : list = []
@@ -38,11 +43,24 @@ class Equation():
             variable_list.append(variable)
         return variable
     
-    def randomize_equation(self) -> None:
-        for _, variable in self.variables.items():
-            variable.randomize()
+
+
+    ##Mutator Methods
+    def set_value(self, name : str , value : float, safe_mode : bool =False) -> None:
+        #raises error if variable is constant
+        variable = self.get_variable(name)
+        variable.set_value(value, safe_mode)
     
-    #Calculations
+    def set_variable(self, variable : Variable):
+        self.variables[variable.get_name()] = variable
+
+    def set_variable_list(self, variable_list : list) -> list:
+        for variable in variable_list:
+            self.set_variable(variable)
+
+
+
+    ##Calculations
     def optimize(self):
         #defines what this equation aims to optimize
         return self.get_exlcusion_zone_area #*clean flow rate (not implemented)
@@ -130,7 +148,14 @@ class Equation():
         
         reynolds_number = formula.reynolds_number(fluid_density, fluid_velocity, characteristic_length, dynamic_viscosity)
         return reynolds_number < 500
-    
+
+
+
+    ##Magic Methods
+    def __str__(self) -> str:
+        variables = ', '.join(str(variable) for variable in self.variables.values())
+        return f"{variables}"
+
     def __hash__(self) -> int:
         sorted_vars = sorted(self.variables.items())#sort variables by name for consistent hashing
         return hash(tuple((name, hash(var)) for name, var in sorted_vars))
