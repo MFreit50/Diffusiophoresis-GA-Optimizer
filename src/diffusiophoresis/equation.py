@@ -20,7 +20,7 @@ class Equation():
 
     ##Accessor Methods
     def get_value(self, name: str) -> float:
-        return self.get_variable(name).value #TODO Add getter for variable value
+        return self.get_variable(name).get_value()
     
     def get_variable(self, name: str) -> Variable:
         if name in self._variables:

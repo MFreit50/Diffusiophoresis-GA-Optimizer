@@ -6,15 +6,15 @@ class Variable:
 
     Attributes
     ----------
-    variable_name : str
+    _variable_name : str
         The name of the variable.
-    value : float
+    _value : float
         The current value of the variable.
-    is_constant : bool
+    _is_constant : bool
         Determines if the variable is constant. If True, its value cannot be changed.
-    min_range : float
+    _min_range : float
         The minimum allowed value for the variable.
-    max_range : float
+    _max_range : float
         The maximum allowed value for the variable.
 
     Methods
@@ -39,24 +39,24 @@ class Variable:
 
         Parameters
         ----------
-        variable_name : str
+        _variable_name : str
             The name of the variable.
-        value : float
+        _value : float
             The initial value of the variable.
-        is_constant : bool
+        _is_constant : bool
             Specifies whether the variable is constant.
-        min_range : float
+        _min_range : float
             The minimum allowed value for the variable.
-        max_range : float
+        _max_range : float
             The maximum allowed value for the variable.
         """
-        self.variable_name = variable_name
-        self.value = value
-        self.is_constant = is_constant
-        self.min_range = min_range
-        self.max_range = max_range
+        self._variable_name = variable_name
+        self._value = value
+        self._is_constant = is_constant
+        self._min_range = min_range
+        self._max_range = max_range
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Returns the name of the variable.
 
@@ -65,9 +65,12 @@ class Variable:
         str
             The name of the variable.
         """
-        return self.variable_name
+        return self._variable_name
     
-    def set_value(self, value: float, safe_mode: bool = False):
+    def get_value(self) -> float:
+        return self._value
+    
+    def set_value(self, value: float, safe_mode: bool = False) -> None:
         """
         Sets the value of the variable if it's not constant.
         If 'safe_mode' is enabled, raises an error if attempting to change a constant variable.
@@ -84,11 +87,11 @@ class Variable:
         ValueError
             If trying to change the value of a constant variable in safe mode.
         """
-        if self.is_constant:
+        if self._is_constant:
             if safe_mode:
-                raise ValueError(f"Variable '{self.variable_name}' is constant and cannot be reassigned")
+                raise ValueError(f"Variable '{self._variable_name}' is constant and cannot be reassigned")
             return  # Do not set value of a constant variable
-        self.value = value
+        self._value = value
 
     def randomize(self) -> None:
         """
@@ -96,8 +99,8 @@ class Variable:
 
         The value is generated using a uniform distribution between the minimum and maximum range.
         """
-        if not self.is_constant:
-            self.value = np.random.uniform(self.min_range, self.max_range)
+        if not self._is_constant:
+            self._value = np.random.uniform(self._min_range, self._max_range)
     
     def is_within_range(self, value: float) -> bool:
         """
@@ -113,14 +116,14 @@ class Variable:
         bool
             True if the value is within the range [min_range, max_range], False otherwise.
         """
-        return self.min_range <= value <= self.max_range
+        return self._min_range <= value <= self._max_range
     
     def __hash__(self) -> int:
-        return hash( (self.variable_name, self.value, self.is_constant, self.min_range, self.max_range) )
+        return hash( (self._variable_name, self._value, self._is_constant, self._min_range, self._max_range) )
 
     def __eq__(self, other) -> int:
         if isinstance(other, Variable):
-            return self.variable_name == other.variable_name and self.value == other.value and self.is_constant == other.is_constant and self.min_range == other.min_range and self.max_range == other.max_range
+            return self._variable_name == other.variable_name and self._value == other.value and self._is_constant == other.is_constant and self._min_range == other.min_range and self._max_range == other.max_range
         
     def to_dict(self) -> dict:
         """
@@ -133,11 +136,11 @@ class Variable:
             and range (min_range, max_range).
         """
         return {
-            "variable_name": self.variable_name,
-            "value": self.value,
-            "is_constant": self.is_constant,
-            "min_range": self.min_range,
-            "max_range": self.max_range
+            "variable_name": self._variable_name,
+            "value": self._value,
+            "is_constant": self._is_constant,
+            "min_range": self._min_range,
+            "max_range": self._max_range
         }
 
     @classmethod
@@ -157,11 +160,11 @@ class Variable:
             A Variable object initialized with the values from the dictionary.
         """
         return cls(
-            variable_name=data["variable_name"],
-            value=data["value"],
-            is_constant=data["is_constant"],
-            min_range=data["min_range"],
-            max_range=data["max_range"]
+            _variable_name=data["variable_name"],
+            _value=data["value"],
+            _is_constant=data["is_constant"],
+            _min_range=data["min_range"],
+            _max_range=data["max_range"]
         )
     def __str__(self):
         """
@@ -172,5 +175,5 @@ class Variable:
         str
             A string describing the variable's name, value, constant state, and range.
         """
-        constant_status = "Constant" if self.is_constant else "Variable"
-        return f"{self.variable_name}: {self.value} [{self.min_range}, {self.max_range}] ({constant_status})"
+        constant_status = "Constant" if self._is_constant else "Variable"
+        return f"{self._variable_name}: {self._value} [{self._min_range}, {self._max_range}] ({constant_status})"
