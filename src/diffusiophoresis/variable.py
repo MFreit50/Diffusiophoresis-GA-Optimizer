@@ -56,6 +56,9 @@ class Variable:
         self._min_range = min_range
         self._max_range = max_range
 
+
+
+    ##Accessor Methods
     def get_name(self) -> str:
         """
         Returns the name of the variable.
@@ -70,6 +73,42 @@ class Variable:
     def get_value(self) -> float:
         return self._value
     
+    def get_min_range(self) -> float:
+        """
+        Returns the minimum range of the variable.
+
+        Returns
+        -------
+        float
+            The minimum allowed value for the variable.
+        """
+        return self._min_range
+
+    def get_max_range(self) -> float:
+        """
+        Returns the maximum range of the variable.
+
+        Returns
+        -------
+        float
+            The maximum allowed value for the variable.
+        """
+        return self._max_range
+
+    def is_constant(self) -> bool:
+        """
+        Returns whether the variable is constant.
+
+        Returns
+        -------
+        bool
+            True if the variable is constant, False otherwise.
+        """
+        return self._is_constant
+
+
+
+    ##Mutator Methods
     def set_value(self, value: float, safe_mode: bool = False) -> None:
         """
         Sets the value of the variable if it's not constant.
@@ -93,6 +132,42 @@ class Variable:
             return  # Do not set value of a constant variable
         self._value = value
 
+    def set_min_range(self, min_range: float) -> None:
+        """
+        Sets the minimum range of the variable.
+
+        Parameters
+        ----------
+        min_range : float
+            The new minimum value for the variable's range.
+        """
+        self._min_range = min_range
+
+    def set_max_range(self, max_range: float) -> None:
+        """
+        Sets the maximum range of the variable.
+
+        Parameters
+        ----------
+        max_range : float
+            The new maximum value for the variable's range.
+        """
+        self._max_range = max_range
+
+    def set_constant(self, is_constant: bool) -> None:
+        """
+        Sets whether the variable is constant.
+
+        Parameters
+        ----------
+        is_constant : bool
+            True to make the variable constant, False otherwise.
+        """
+        self._is_constant = is_constant
+
+
+
+    ##Utility Methods
     def randomize(self) -> None:
         """
         Randomly assigns a value within the variable's range if it is not constant.
@@ -118,13 +193,31 @@ class Variable:
         """
         return self._min_range <= value <= self._max_range
     
+
+
+    ##Magic Methods
     def __hash__(self) -> int:
         return hash( (self._variable_name, self._value, self._is_constant, self._min_range, self._max_range) )
 
     def __eq__(self, other) -> int:
         if isinstance(other, Variable):
-            return self._variable_name == other.variable_name and self._value == other.value and self._is_constant == other.is_constant and self._min_range == other.min_range and self._max_range == other.max_range
-        
+            return self._variable_name == other._variable_name and self._value == other._value and self._is_constant == other._is_constant and self._min_range == other._min_range and self._max_range == other._max_range
+    
+    def __str__(self):
+        """
+        Returns a string representation of the Variable object.
+
+        Returns
+        -------
+        str
+            A string describing the variable's name, value, constant state, and range.
+        """
+        constant_status = "Constant" if self._is_constant else "Variable"
+        return f"{self._variable_name}: {self._value} [{self._min_range}, {self._max_range}] ({constant_status})"    
+
+
+
+    ##Serialization Methods
     def to_dict(self) -> dict:
         """
         Converts the Variable object to a dictionary representation.
@@ -166,14 +259,3 @@ class Variable:
             _min_range=data["min_range"],
             _max_range=data["max_range"]
         )
-    def __str__(self):
-        """
-        Returns a string representation of the Variable object.
-
-        Returns
-        -------
-        str
-            A string describing the variable's name, value, constant state, and range.
-        """
-        constant_status = "Constant" if self._is_constant else "Variable"
-        return f"{self._variable_name}: {self._value} [{self._min_range}, {self._max_range}] ({constant_status})"
