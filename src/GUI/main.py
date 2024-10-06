@@ -4,14 +4,14 @@ import os
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 from diffusiophoresis.variable import Variable
-from Modules.data_engine import DataEngine
+#from Modules.data_engine import DataEngine
 from Modules.main_coordinator import MainCoordinator
 
 if __name__ == "__main__":
     main_coordinator = MainCoordinator()
     main_coordinator.initialize()
 
-
+'''
 def initialize_variables():
     variable_names = [
         "absolute_temperature",
@@ -38,3 +38,4 @@ def initialize_variables():
         print(f"{var} is of type {type(var)}")
 
     data_engine.write_variable_list(variables)
+'''
