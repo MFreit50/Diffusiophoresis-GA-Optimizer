@@ -1,5 +1,5 @@
 import json
-from diffusiophoresis.variable import Variable
+from variable import Variable
 
 class DataEngine:
     @staticmethod
