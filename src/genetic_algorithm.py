@@ -4,7 +4,7 @@ import random
 from diffusiophoresis.equation import Equation
 
 class GeneticAlgorithm:
-    def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float):
+    def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float, broadcaster):
         """
         Initialize the Genetic Algorithm.
 
@@ -32,6 +32,7 @@ class GeneticAlgorithm:
 
         self.cached_fitness: dict = {}
 
+        self.broadcaster = broadcaster
     
     def run(self) -> Equation:
         """
@@ -84,22 +85,19 @@ class GeneticAlgorithm:
             fitness_results = self.evaluate_population_fitness(new_population)
 
             # Sort population based on fitness and keep the best individuals
-            self.population = [equation for equation in sorted(zip(fitness_results, new_population), key=lambda x: x[0], reverse=True)]
-            self.best_equation = self.population[0]
+            new_population = [equation for equation in sorted(zip(fitness_results, new_population), key=lambda x: x[0], reverse=True)]
+            _, self.best_equation = new_population[0]
 
             # Adjust mutation rate based on population diversity
             unique_fitness_results = len(set(fitness_results))
-            if unique_fitness_results < self.population_size * 0.1:  # Low diversity
+            if unique_fitness_results < self.population_size * 0.10:  # Low diversity
                 self.mutation_rate = min(self.mutation_rate * 1.1, 0.5)
             else:
                 self.mutation_rate = max(self.mutation_rate * 0.9, 0.01)
             
-            # Debugging output to track progress
-            best_fitness = self.evaluate_fitness(self.best_equation)
-            print(f'\nGeneration {generation + 1}')
-            print(f'\tBest Fitness: {best_fitness}')
-            print(f'\tMutation Rate: {self.mutation_rate:.3f}')
-            print(f'\tUnique Fitness Scores: {unique_fitness_results}')
+            self.broadcast_data(generation, fitness_results)
+
+        print(self.best_equation)
 
     def select_parents(self, method:str="tournament") -> tuple:
         """
@@ -222,6 +220,8 @@ class GeneticAlgorithm:
         if np.random.rand() > self.mutation_rate:
             return child
         
+        return child.randomize_equation()
+        ##code below does not function as intended
         if(method == "swap"):
             child = self.swap_mutation(child)
             return child
@@ -240,8 +240,8 @@ class GeneticAlgorithm:
         """
         mutated_child = child
         variable_list = child.get_variable_list()
-        variable_list = [variable for variable in variable_list if not variable.is_constant]#Filter out constant variables
-
+        variable_list = [variable for variable in variable_list if not variable.is_constant()]#Filter out constant variables
+        
         index1, index2 = random.sample(range(len(variable_list)), 2)
 
         variable1 = variable_list[index1]
@@ -249,12 +249,12 @@ class GeneticAlgorithm:
 
         variable1_name = variable1.get_name()
         variable2_name = variable2.get_name()
-        variable2_value = variable2.value #TODO change to getter function when it exists in Equation class
 
-        mutated_child.set_value(variable2_name, variable1.value)
-        mutated_child.set_value(variable1_name, variable2_value)
+        mutated_child.set_value(variable2_name, variable1.get_value())
+        mutated_child.set_value(variable1_name, variable2.get_value())
         
         return mutated_child
+
 
     def evaluate_population_fitness(self, population: list) -> list:
         """
@@ -293,8 +293,20 @@ class GeneticAlgorithm:
         if equation in self.cached_fitness:
             return self.cached_fitness[equation]
         
-        fitness: float = equation.optimize()
+        #fitness: float = equation.optimize()
+        
+        fitness : float = equation.get_diffusiophoretic_velocity()
         self.cached_fitness[equation] = fitness
         
         return fitness
         
+    def broadcast_data(self, generation : int, fitness_results : list) -> None:
+        data = {
+                "generation": generation + 1,
+                "best_fitness": self.evaluate_fitness(self.best_equation),
+                "mutation_rate": self.mutation_rate,
+                "unique_fitness_scores": len(set(fitness_results))
+            }
+            
+        #Broadcast the data to listeners
+        self.broadcaster.broadcast(data)
