@@ -15,9 +15,10 @@ class Equation():
         self._variables[variable.get_name()] = variable
 
     def randomize_equation(self) -> None:
-        for _, variable in self.variables.items():
+        for variable in self._variables.values():
             variable.randomize()
-
+        return self
+    
     ##Accessor Methods
     def get_value(self, name: str) -> float:
         return self.get_variable(name).get_value()
@@ -32,7 +33,7 @@ class Equation():
             length: str = len(self._variables)
             raise IndexError("Index '{index}' out of range for dictionary of size '{length}'")
         
-        variable_list : list = list(self.variables.values())
+        variable_list : list = list(self._variables.values())
         return variable_list[index]
     
     def get_variable_list(self) -> list:
@@ -45,7 +46,7 @@ class Equation():
         variable.set_value(value, safe_mode)
     
     def set_variable(self, variable: Variable):
-        self.variables[variable.get_name()] = variable
+        self._variables[variable.get_name()] = variable
 
     def set_variable_list(self, variable_list: list) -> list:
         for variable in variable_list:
@@ -142,7 +143,7 @@ class Equation():
 
     ##Magic Methods
     def __str__(self) -> str:
-        variables: str = ', '.join(str(variable) for variable in self.variables.values())
+        variables: str = ', '.join(str(variable) for variable in self._variables.values())
         return f"{variables}"
 
     def __hash__(self) -> int:
