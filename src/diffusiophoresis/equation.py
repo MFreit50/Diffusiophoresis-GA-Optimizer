@@ -36,7 +36,10 @@ class Equation():
         variable_list : list = list(self._variables.values())
         return variable_list[index]
     
-    def get_variable_list(self) -> list:
+    def get_variable_list(self, filter_constants=False) -> list:
+        if filter_constants == True:
+            return [variable for variable in self._variables.values() if not variable.is_constant()]
+        
         return list(self._variables.values())
 
     ##Mutator Methods
