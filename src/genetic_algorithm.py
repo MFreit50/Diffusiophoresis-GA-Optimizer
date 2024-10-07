@@ -160,7 +160,7 @@ class GeneticAlgorithm:
             child: The newly generated equation after crossover.
         """
 
-        if np.random.rand() < self.crossover_rate:
+        if np.random.rand() > self.crossover_rate:
             return parent1, parent2
             
         if(method == "uniform"): 
