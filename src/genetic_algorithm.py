@@ -2,6 +2,7 @@ import numpy as np
 import concurrent.futures
 import random
 from diffusiophoresis.equation import Equation
+from diffusiophoresis.variable import Variable
 
 class GeneticAlgorithm:
     def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float, broadcaster):
@@ -28,6 +29,7 @@ class GeneticAlgorithm:
         self.crossover_rate: float = crossover_rate
         self.mutation_rate: float = mutation_rate
         self.population: list = []
+        self.fitness_scores: list = []
         self.best_equation: Equation = None
 
         self.cached_fitness: dict = {}
@@ -56,6 +58,7 @@ class GeneticAlgorithm:
         create_random_equation method.
         """
         self.population = [Equation().randomize_equation() for _ in range(self.population_size)]
+        self.fitness_scores = self.evaluate_population_fitness(self.population)
     
     def evolve(self):
         """
@@ -72,34 +75,39 @@ class GeneticAlgorithm:
         """
         for generation in range(self.generations):
             new_population: list = []
-
             # Create a new population via selection, crossover, and mutation
+            
             while len(new_population) < self.population_size:
                 parent1, parent2 = self.select_parents() 
                 child1, child2 = self.crossover(parent1, parent2)
                 child1 = self.mutate(child1) 
                 child2 = self.mutate(child2)
                 new_population.extend([child1, child2])
+            
+            #print("population size: ", len(self.population))
+            self.population = new_population
 
             # Evaluate the fitness of the new population
             fitness_results = self.evaluate_population_fitness(new_population)
+            self.fitness_scores = fitness_results
 
-            # Sort population based on fitness and keep the best individuals
-            new_population = [equation for equation in sorted(zip(fitness_results, new_population), key=lambda x: x[0], reverse=True)]
-            _, self.best_equation = new_population[0]
+            sorted_population = self.sort_population_by_fitness(new_population, fitness_results)
+            self.best_equation = sorted_population[0]
 
             # Adjust mutation rate based on population diversity
             unique_fitness_results = len(set(fitness_results))
             if unique_fitness_results < self.population_size * 0.10:  # Low diversity
-                self.mutation_rate = min(self.mutation_rate * 1.1, 0.5)
+                #self.mutation_rate = min(self.mutation_rate * 1.1, 0.5)
+                pass
             else:
-                self.mutation_rate = max(self.mutation_rate * 0.9, 0.01)
+                #self.mutation_rate = max(self.mutation_rate * 0.9, 0.01)
+                pass
             
             self.broadcast_data(generation, fitness_results)
 
         print(self.best_equation)
 
-    def select_parents(self, method:str="tournament") -> tuple:
+    def select_parents(self) -> tuple:
         """
         Select two parent equations from the population based on fitness.
 
@@ -110,16 +118,44 @@ class GeneticAlgorithm:
         Returns:
             tuple: Two equations selected for crossover.
         """
-
+        method_list: list = ["tournament", "roulette"]
+        method = random.choice(method_list)
+        #print("method: ", method)
         parent1 = None
         parent2 = None
         if(method == "tournament"):
             parent1, parent2 = self.tournament_selection(tournament_size=6)
+        elif(method == "roulette"):
+            parent1, parent2 = self.roulette_selection()
         else:
             raise NotImplementedError("This selection method is either invalid or not implemented yet!")
 
         return parent1, parent2
 
+    def roulette_selection(self):
+        #Step 1: calculate total fitness
+        total_fitness: float = sum(fitness for fitness in self.fitness_scores)
+
+        #Step 2: calculate cummulative probabilities
+        cummulative_probabilities: list = []
+        cummulative_sum: float = 0
+        for fitness in self.fitness_scores:
+            normalized_probability: float = fitness / total_fitness
+            cummulative_sum += normalized_probability
+            cummulative_probabilities.append(cummulative_sum)
+
+        #Step 3: select individual randomly
+        def roulette_select_parent():
+            random_value = random.random()
+            for i, cummulative_probability in enumerate(cummulative_probabilities):
+                if random_value <= cummulative_probability:
+                    return self.population[i]
+        
+        parent1 = roulette_select_parent()
+        parent2 = roulette_select_parent()
+
+        return parent1, parent2
+            
     def tournament_selection(self, tournament_size: int) -> tuple:
         """
         Perform tournament selection to choose top individuals from a population
@@ -199,7 +235,7 @@ class GeneticAlgorithm:
 
         return child1, child2
 
-    def mutate(self, child: Equation, method:str="swap") -> Equation:
+    def mutate(self, child: Equation) -> Equation:
         """
         Mutate a child equation to introduce variation.
 
@@ -219,42 +255,36 @@ class GeneticAlgorithm:
 
         if np.random.rand() > self.mutation_rate:
             return child
-        
-        return child.randomize_equation()
+        method = "step"
         ##code below does not function as intended
-        if(method == "swap"):
-            child = self.swap_mutation(child)
-            return child
+        if(method == "randomize"):
+            return self.randomize_mutation(child)
+        elif(method == "step"):
+            return self.step_mutation(child)
         else:
             raise NotImplementedError("This mutation method is either invalid or not implemented yet!")
 
-    def swap_mutation(self, child: Equation) -> Equation:
-        """
-        Perform swap mutation on the given equation and return a new mutated equation.
+    def randomize_mutation(self, child: Equation) -> Equation:
+        return child.randomize_equation()
 
-        Args:
-            child (Equation): The equation object to mutate.
-
-        Returns:
-            Equation: A new equation object with swapped variable values.
-        """
-        mutated_child = child
+    def step_mutation(self, child: Equation) -> Equation:
+        #get non constant variables from equation
         variable_list = child.get_variable_list()
-        variable_list = [variable for variable in variable_list if not variable.is_constant()]#Filter out constant variables
+        filtered_variables = [var for var in variable_list if not var.is_constant()]
         
-        index1, index2 = random.sample(range(len(variable_list)), 2)
-
-        variable1 = variable_list[index1]
-        variable2 = variable_list[index2]
-
-        variable1_name = variable1.get_name()
-        variable2_name = variable2.get_name()
-
-        mutated_child.set_value(variable2_name, variable1.get_value())
-        mutated_child.set_value(variable1_name, variable2.get_value())
+        #choose a variable randomly
+        chosen_variable: Variable = random.choice(filtered_variables)
         
-        return mutated_child
+        #add a small positive or negative step to the value
+        current_value = chosen_variable.get_value()
+        step_size = random.uniform(-0.001, 0.001)
+        
+        #ensure the new value stays within the bounds of max/min range
+        new_value = np.clip(current_value + step_size, chosen_variable.get_min_range(), chosen_variable.get_max_range())
+        chosen_variable.set_value(new_value)
 
+        child.add_variable(chosen_variable)
+        return child
 
     def evaluate_population_fitness(self, population: list) -> list:
         """
@@ -299,6 +329,14 @@ class GeneticAlgorithm:
         self.cached_fitness[equation] = fitness
         
         return fitness
+    
+    def sort_population_by_fitness(self, population, fitness_scores):
+        """
+        Returns a new population sorted by their fitness scores in descending order.
+        """
+        paired_population = list(zip(fitness_scores, population))
+        sorted_population = sorted(paired_population, key=lambda x: x[0], reverse=True)
+        return [individual for _, individual in sorted_population]
         
     def broadcast_data(self, generation : int, fitness_results : list) -> None:
         data = {
