@@ -14,6 +14,7 @@ class Selection():
         """
         method_list: list = ["tournament", "roulette"]
         method = random.choice(method_list)
+        method = "roulette"
         #print("method: ", method)
         parent1 = None
         parent2 = None
@@ -33,7 +34,7 @@ class Selection():
         #Step 2: calculate cummulative probabilities
         cummulative_probabilities: list = []
         cummulative_sum: float = 0
-        for fitness in self.fitness_scores:
+        for fitness in fitness_scores:
             normalized_probability: float = fitness / total_fitness
             cummulative_sum += normalized_probability
             cummulative_probabilities.append(cummulative_sum)

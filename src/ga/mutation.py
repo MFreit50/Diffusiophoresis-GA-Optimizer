@@ -1,11 +1,11 @@
 import random
 import numpy as np
-from equation import Equation
-from variable import Variable
+from diffusiophoresis.equation import Equation
+from diffusiophoresis.variable import Variable
 
 
 class Mutation:
-    def mutate(self, child: Equation) -> Equation:
+    def mutate(self, mutation_rate: float, child: Equation) -> Equation:
         """
         Mutate a child equation to introduce variation.
 
@@ -23,7 +23,7 @@ class Mutation:
 
         #TODO Have mutate() handle an input of an array of Equations
 
-        if np.random.rand() > self.mutation_rate:
+        if np.random.rand() > mutation_rate:
             return child
         
         methods = ["randomize", "step", "step", "step"]

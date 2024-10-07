@@ -1,11 +1,11 @@
 import random
 import numpy as np
 
-from equation import Equation
+from diffusiophoresis.equation import Equation
 
 
 class Crossover:
-    def crossover(self, parent1: Equation, parent2: Equation) -> tuple:
+    def crossover(self, crossover_rate : float, parent1: Equation, parent2: Equation) -> tuple:
         """
         Perform crossover (recombination) between two parent equations to produce a child.
 
@@ -21,7 +21,7 @@ class Crossover:
         Returns:
             child: The newly generated equation after crossover.
         """
-        if np.random.rand() > self.crossover_rate:
+        if np.random.rand() > crossover_rate:
             return parent1, parent2
         
         methods = ["uniform", "single_point"]
