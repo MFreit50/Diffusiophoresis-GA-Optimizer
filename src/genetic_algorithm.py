@@ -85,6 +85,7 @@ class GeneticAlgorithm:
                 new_population.extend([child1, child2])
             
             #print("population size: ", len(self.population))
+
             self.population = new_population
 
             # Evaluate the fitness of the new population
@@ -179,7 +180,7 @@ class GeneticAlgorithm:
 
         return parent1, parent2     
 
-    def crossover(self, parent1: Equation, parent2: Equation, method:str="uniform") -> tuple:
+    def crossover(self, parent1: Equation, parent2: Equation) -> tuple:
         """
         Perform crossover (recombination) between two parent equations to produce a child.
 
@@ -195,13 +196,17 @@ class GeneticAlgorithm:
         Returns:
             child: The newly generated equation after crossover.
         """
-
         if np.random.rand() > self.crossover_rate:
             return parent1, parent2
-            
+        
+        methods = ["uniform", "single_point"]
+        method = random.choice(methods)
+        #print("method: ", method)
         if(method == "uniform"): 
             child1, child2 = self.uniform_crossover(parent1, parent2)
             return child1, child2
+        elif(method == "single_point"):
+            return self.single_point_crossover(parent1, parent2)
         else:
             raise NotImplementedError("This crossover method is either invalid or not implemented yet!")
 
@@ -235,6 +240,20 @@ class GeneticAlgorithm:
 
         return child1, child2
 
+    def single_point_crossover(self, parent1 : Equation, parent2 : Equation) -> Equation:
+        #aquire 1 variable from each parent
+        variable_1 = random.choice(parent1.get_variable_list(filter_constants=True))
+        variable_2 = random.choice(parent2.get_variable_list(filter_constants=True))
+
+        #switch the variable between parents to create child
+        child1 = parent1
+        child2 = parent2
+
+        child1.add_variable(variable_2)
+        child2.add_variable(variable_1)
+
+        return child1, child2
+
     def mutate(self, child: Equation) -> Equation:
         """
         Mutate a child equation to introduce variation.
@@ -255,7 +274,11 @@ class GeneticAlgorithm:
 
         if np.random.rand() > self.mutation_rate:
             return child
-        method = "step"
+        
+        methods = ["randomize", "step", "step", "step"]
+        method = random.choice(methods)
+        #print("method: ", method)
+
         ##code below does not function as intended
         if(method == "randomize"):
             return self.randomize_mutation(child)
