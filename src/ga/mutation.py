@@ -50,6 +50,8 @@ class Mutation:
         
         #add a small positive or negative step to the value
         current_value = chosen_variable.get_value()
+        #TODO: A step of +-0.001 is too small for variables with larger range
+
         step_size = random.uniform(-0.001, 0.001)
         
         #ensure the new value stays within the bounds of max/min range
