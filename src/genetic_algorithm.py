@@ -30,7 +30,7 @@ class GeneticAlgorithm:
         """
         #Components
         self.mutation = Mutation()
-        self.crossovera = Crossover()
+        self.crossover = Crossover()
         self.selection = Selection()
 
         self.generations: int = generations
@@ -89,7 +89,7 @@ class GeneticAlgorithm:
 
             while len(new_population) < self.population_size:
                 parent1, parent2 = self.selection.select_parents(self.population, self.fitness_scores)
-                child1, child2 = self.crossovera.crossover(self.crossover_rate, parent1, parent2)
+                child1, child2 = self.crossover.crossover(self.crossover_rate, parent1, parent2)
                 child1 = self.mutation.mutate(self.mutation_rate, child1)
                 child2 = self.mutation.mutate(self.mutation_rate, child2)
                 new_population.extend([child1, child2])
