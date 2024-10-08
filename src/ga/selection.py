@@ -1,3 +1,4 @@
+import copy
 import random
 
 class Selection():
@@ -14,17 +15,16 @@ class Selection():
         """
         method_list: list = ["tournament", "roulette"]
         method = random.choice(method_list)
-        method = "roulette"
-        #print("method: ", method)
-        parent1 = None
-        parent2 = None
+
         if(method == "tournament"):
-            parent1, parent2 = self.tournament_selection(population, tournament_size=6)
+            parent1, parent2 = self.tournament_selection(population, fitness_scores, tournament_size=6)
         elif(method == "roulette"):
             parent1, parent2 = self.roulette_selection(population, fitness_scores)
         else:
             raise NotImplementedError("This selection method is either invalid or not implemented yet!")
 
+        parent1 = copy.deepcopy(parent1)
+        parent2 = copy.deepcopy(parent2)
         return parent1, parent2
 
     def roulette_selection(self, population, fitness_scores):
@@ -51,7 +51,7 @@ class Selection():
 
         return parent1, parent2
             
-    def tournament_selection(self, population: list, tournament_size: int) -> tuple:
+    def tournament_selection(self, population: list, fitness_scores: list, tournament_size: int) -> tuple:
         """
         Perform tournament selection to choose top individuals from a population
 
@@ -60,16 +60,14 @@ class Selection():
 
         Returns: tuple: A tuple containing the selected individuals
         """
+        def tournament_select_parent():
+            tournament_contestants_indices = random.sample(range(len(population)), tournament_size)
+            best_contestant_index = max(tournament_contestants_indices, key=lambda idx: fitness_scores[idx])
+            return population[best_contestant_index]
         
-        # First tournament
-        tournament_contestants1 = random.sample(population, tournament_size)
-        parent1 = max(tournament_contestants1, key=lambda individual: self.evaluate_fitness(individual))
-
-        #Remove the first parent from the population
-        population_without_parent1 = [individual for individual in population if individual != parent1]
-
-        #Second tournament
-        tournament_contestants2 = random.sample(population_without_parent1, tournament_size)
-        parent2 = max(tournament_contestants2, key=lambda individual: self.evaluate_fitness(individual))
-
+        parent1 = tournament_select_parent()
+        parent2 = tournament_select_parent()
+        while parent1 == parent2:
+            parent2 = tournament_select_parent()
+            
         return parent1, parent2
