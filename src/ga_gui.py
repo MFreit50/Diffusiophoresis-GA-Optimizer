@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
@@ -37,6 +38,9 @@ class GA_GUI:
         self.root = root
         self.root.title("GA Progress")
         self.root.geometry("1400x800")  # Wider and taller window size
+        
+        # Bind the window close event to the on_closing function
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.scrollable_frame = ScrollableFrame(root)
         self.scrollable_frame.pack(side=tk.LEFT, fill="both", expand=True)
@@ -191,3 +195,10 @@ class GA_GUI:
         self.console.insert(tk.END, f'Mutation Rate: {mutation_rate:.3f}\n')
         self.console.insert(tk.END, f'Unique Fitness Scores: {unique_fitness_results}\n')
         self.console.yview(tk.END)  # Auto scroll to the latest entry
+    
+    def on_closing(self):
+        """Handle the window close event."""
+        # Perform any cleanup actions (if needed) 
+        self.root.quit()  # Stop the mainloop
+        self.root.destroy()  # Destroy the window
+        sys.exit(0)
