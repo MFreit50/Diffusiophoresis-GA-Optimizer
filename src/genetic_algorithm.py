@@ -29,9 +29,9 @@ class GeneticAlgorithm:
             cached_fitness (dict): A cache that stores pre-calculated fitness scores of individuals for performance optimization.
         """
         #Components
-        self.mutation = Mutation()
-        self.crossover = Crossover()
-        self.selection = Selection()
+        self.mutation_strategy = Mutation()
+        self.crossover_strategy = Crossover()
+        self.selection_strategy = Selection()
 
         self.generations: int = generations
         self.population_size: int = population_size
