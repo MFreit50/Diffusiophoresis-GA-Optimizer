@@ -107,7 +107,7 @@ class GeneticAlgorithm:
 
             # Adjust mutation rate based on population diversity
             unique_fitness_results = len(set(fitness_results))
-            if unique_fitness_results < self.population_size * 0.15:  # Low diversity
+            if unique_fitness_results < self.population_size * 0.50:  # Low diversity
                 self.mutation_rate = min(self.mutation_rate * 1.1, 0.5)
                 pass
             else:
