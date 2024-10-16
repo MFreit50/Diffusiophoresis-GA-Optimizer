@@ -1,5 +1,6 @@
 import copy
 import random
+from abc import ABC, abstractmethod
 
 class Selection():
     def select_parents(self, population, fitness_scores) -> tuple:
