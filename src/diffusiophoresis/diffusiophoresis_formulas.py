@@ -242,10 +242,9 @@ class DiffusiophoresisFormulas:
         Returns:
             tuple: Calculated exclusion zone area (µm²) and velocity (m/s).
         """
-        number_of_particles = 1
-        number_of_points = 200
-        y = np.linspace(start=0, stop=channel_height, num=number_of_particles)  # Particle Y positions
-        time = np.linspace(start=0, stop=200, num=number_of_points)             # Time vector (0 to 200 seconds)
+        residence = channel_length / mean_flow_velocity
+        y = 0  # initial particle position
+        time = np.linspace(start=0, stop=residence, num=residence*2)             #Time vector (0 to residence seconds)
 
         # Calculate particle position
         x_pos, y_pos = DiffusiophoresisFormulas._calculate_particle_position(channel_height,  mean_flow_velocity, diffusiophoretic_velocity, time, y)
