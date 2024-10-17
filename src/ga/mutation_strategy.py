@@ -16,7 +16,10 @@ class RandomizeMutation(MutationStrategy):
         return child.randomize_equation()
     
 class StepMutation(MutationStrategy):
-    def mutate(self, child: Equation) -> Equation:
+    def mutate(self, mutation_rate: float, child: Equation) -> Equation:
+        if np.random.rand() > mutation_rate:
+            return child
+        
         #get non constant variables from equation
         variable_list = child.get_variable_list(filter_constants=True)
         

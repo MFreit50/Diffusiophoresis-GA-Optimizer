@@ -4,9 +4,7 @@ import concurrent.futures
 import random
 from diffusiophoresis.equation import Equation
 from diffusiophoresis.variable import Variable
-from ga.crossover import Crossover
-from ga.mutation import Mutation
-from ga.selection import Selection
+from GA.strategy_manager import StrategyManager
 
 class GeneticAlgorithm:
     def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float, broadcaster=None):
@@ -29,9 +27,7 @@ class GeneticAlgorithm:
             cached_fitness (dict): A cache that stores pre-calculated fitness scores of individuals for performance optimization.
         """
         #Components
-        self.mutation_strategy = Mutation()
-        self.crossover_strategy = Crossover()
-        self.selection_strategy = Selection()
+        self.strategy_manager = StrategyManager(mutation_rate=mutation_rate, crossover_rate=crossover_rate)
 
         self.generations: int = generations
         self.population_size: int = population_size
@@ -87,14 +83,16 @@ class GeneticAlgorithm:
         no_improvement_counter: int = 0
 
         for generation in range(self.generations):
-            new_population: list = []
-
+            
+            # TODO Population analysis never happens for the initial population; strategy manager should be updated to do so
+            
             # Create a new population via selection, crossover, and mutation
+            new_population: list = []
             while len(new_population) < self.population_size:
-                parent1, parent2 = self.selection.select_parents(self.population, self.fitness_scores)
-                child1, child2 = self.crossover.crossover(self.crossover_rate, parent1, parent2)
-                child1 = self.mutation.mutate(self.mutation_rate, child1)
-                child2 = self.mutation.mutate(self.mutation_rate, child2)
+                parent1, parent2 = self.strategy_manager.select_parents(self.population, self.fitness_scores)
+                child1, child2 = self.strategy_manager.crossover(parent1, parent2)
+                child1 = self.strategy_manager.mutate(child1)
+                child2 = self.strategy_manager.mutate(child2)
                 new_population.extend([child1, child2])
 
             #print("population size: ", len(self.population))
@@ -119,17 +117,10 @@ class GeneticAlgorithm:
 
             # Adjust mutation rate based on population diversity
             unique_fitness_results = len(set(fitness_results))
-            if unique_fitness_results < self.population_size * 0.15:  # Low diversity
-                self.mutation_rate = min(self.mutation_rate * 1.1, 0.5)
-                pass
-            else:
-                self.mutation_rate = max(self.mutation_rate * 0.9, 0.01)
-                pass
+            self.strategy_manager.update_strategies(unique_fitness_results, fitness_results, self.population_size)
             
-            if not self.broadcaster:
-                return
-            
-            self.broadcast_data(generation, fitness_results)
+            if self.broadcaster:
+                self.broadcast_data(generation, fitness_results)
 
         print(self.best_equation)
 
@@ -198,7 +189,7 @@ class GeneticAlgorithm:
         data = {
                 "generation": generation + 1,
                 "best_fitness": self.evaluate_fitness(self.best_equation),
-                "mutation_rate": self.mutation_rate,
+                "mutation_rate": self.strategy_manager.get_mutation_rate(),
                 "unique_fitness_scores": len(set(fitness_results))
             }
             
