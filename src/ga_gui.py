@@ -34,7 +34,7 @@ class ScrollableFrame(ttk.Frame):
 
 
 class GA_GUI:
-    def __init__(self, root):
+    def __init__(self, root, store_all_data=False):
         self.root = root
         self.root.title("GA Progress")
         self.root.geometry("1400x800")  # Wider and taller window size
@@ -46,8 +46,6 @@ class GA_GUI:
         self.scrollable_frame.pack(side=tk.LEFT, fill="both", expand=True)
 
         self.figure = Figure(figsize=(12, 15), dpi=100)
-
-        # Adjust spacing between subplots
         self.figure.subplots_adjust(hspace=0.4)  # Slightly increase vertical space between graphs
 
         # Create subplots with labels
@@ -84,40 +82,73 @@ class GA_GUI:
 
         # Horizontal scrollbar to control x-axis range, now placed at the bottom-left of the visible area
         self.h_scrollbar = ttk.Scale(root, from_=0, to=100, orient="horizontal", command=self._on_scroll)
-        self.h_scrollbar.place(x=10, rely=0.97, relwidth=0.7)  # Positioned to the bottom-left
+        self.h_scrollbar.place(x=10, rely=0.97, relwidth=0.7)
 
         self.max_generations_to_display = 100
         self.display_start = 0
-        self.total_generations = 0
 
+        self.total_generations = 0
+        self.true_generation = 0
+        
         self.auto_scroll = True  # Automatically follow new data unless manually scrolled
-        self._init_hover()
+
+        self.store_all_data = store_all_data
+        self.max_generations_memory = float('inf') if store_all_data else 100  # If store_all_data is true, no limit
+
+        if not self.store_all_data:
+            self.h_scrollbar.pack_forget()  # Hide the scrollbar if store_all_data is False
 
     def _on_scroll(self, value):
         """Handle horizontal scrollbar interaction."""
         scroll_value = int(float(value))
+        max_value = int(self.h_scrollbar.cget('to'))  # Get the maximum scrollbar value
+
+        if scroll_value >= max_value:
+            # If the user scrolls all the way to the right, re-enable auto-follow
+            self.auto_scroll = True
+        else:
+            # Otherwise, disable auto-follow when manually scrolling
+            self.auto_scroll = False
+        
         self.display_start = scroll_value
-        self.auto_scroll = False  # Disable auto-follow when manually scrolling
         self.update_plots()
 
     def update_plots(self):
         """Update the visible range of the plots according to the scrollbar value."""
+        # Ensure lists are synchronized
+        min_length = min(len(self.generation_list), 
+                        len(self.best_fitness_list), 
+                        len(self.mutation_rate_list), 
+                        len(self.unique_fitness_list))
+
+        # Trim all lists to the same length
+        self.generation_list = self.generation_list[:min_length]
+        self.best_fitness_list = self.best_fitness_list[:min_length]
+        self.mutation_rate_list = self.mutation_rate_list[:min_length]
+        self.unique_fitness_list = self.unique_fitness_list[:min_length]
+
         if self.auto_scroll:
             self.display_start = max(0, self.total_generations - self.max_generations_to_display)
 
         x_min = max(0, self.display_start)
         x_max = x_min + self.max_generations_to_display
 
+        # Only plot the visible part of the data in memory
         display_generations = self.generation_list[x_min:x_max]
+        display_best_fitness = self.best_fitness_list[x_min:x_max]
+        display_mutation_rate = self.mutation_rate_list[x_min:x_max]
+        display_unique_fitness = self.unique_fitness_list[x_min:x_max]
 
-        self.line_best.set_data(display_generations, self.best_fitness_list[x_min:x_max])
-        self.line_mutation.set_data(display_generations, self.mutation_rate_list[x_min:x_max])
-        self.line_unique.set_data(display_generations, self.unique_fitness_list[x_min:x_max])
+        # Set the plot data for the visible range
+        self.line_best.set_data(display_generations, display_best_fitness)
+        self.line_mutation.set_data(display_generations, display_mutation_rate)
+        self.line_unique.set_data(display_generations, display_unique_fitness)
 
-        # Adjust x-axis limits to fit the selected range
-        self.ax1.set_xlim(x_min, x_max)
-        self.ax2.set_xlim(x_min, x_max)
-        self.ax3.set_xlim(x_min, x_max)
+        # Adjust x-axis limits to fit the true generation count
+        if display_generations:
+            self.ax1.set_xlim(display_generations[0], display_generations[-1])
+            self.ax2.set_xlim(display_generations[0], display_generations[-1])
+            self.ax3.set_xlim(display_generations[0], display_generations[-1])
 
         self.ax1.relim()
         self.ax1.autoscale_view()
@@ -168,28 +199,39 @@ class GA_GUI:
             for annotation in self.annotations:
                 annotation.set_visible(False)
         self.canvas.draw_idle()
-
+        
     def update(self, data):
         generation = data['generation']
         best_fitness = data['best_fitness']
         mutation_rate = data['mutation_rate']
         unique_fitness_results = data['unique_fitness_scores']
 
+        # Append the new data
         self.generation_list.append(generation)
         self.best_fitness_list.append(best_fitness)
         self.mutation_rate_list.append(mutation_rate)
         self.unique_fitness_list.append(unique_fitness_results)
 
-        self.total_generations = len(self.generation_list)
+        # Only enforce memory limit if store_all_data is False
+        if not self.store_all_data and len(self.generation_list) > self.max_generations_memory:
+            self.generation_list.pop(0)
+            self.best_fitness_list.pop(0)
+            self.mutation_rate_list.pop(0)
+            self.unique_fitness_list.pop(0)
 
-        # Update the scrollbar maximum to match the total generations
-        self.h_scrollbar.config(to=max(0, self.total_generations - self.max_generations_to_display))
+        self.total_generations = len(self.generation_list)
+        self.true_generation += 1  # Increment the true generation count
 
         if self.auto_scroll:
             self.display_start = max(0, self.total_generations - self.max_generations_to_display)
 
+        # Only update scrollbar if store_all_data is True
+        if self.store_all_data:
+            self.h_scrollbar.config(to=max(0, self.true_generation - self.max_generations_to_display))
+
         self.update_plots()
 
+        # Log data in the console
         self.console.insert(tk.END, f'\nGeneration {generation}\n')
         self.console.insert(tk.END, f'Best Fitness: {best_fitness}\n')
         self.console.insert(tk.END, f'Mutation Rate: {mutation_rate:.3f}\n')
@@ -198,7 +240,7 @@ class GA_GUI:
     
     def on_closing(self):
         """Handle the window close event."""
-        # Perform any cleanup actions (if needed) 
+        # Perform any cleanup actions (if needed)
         self.root.quit()  # Stop the mainloop
         self.root.destroy()  # Destroy the window
         sys.exit(0)
