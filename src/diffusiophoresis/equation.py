@@ -66,19 +66,19 @@ class Equation():
         
         channel_height: float = self.get_value("channel_height")
         channel_length: float = self.get_value("channel_length")
+        channel_width: float = self.get_value("channel_width")
+
         mean_velocity: float = 1 #need to get this value
         diffusiophoretic_velocity: float = self.get_diffusiophoretic_velocity()
-        return formula.exclusion_zone_area(channel_height, channel_length, mean_velocity, diffusiophoretic_velocity)
+        return formula.exclusion_zone_area(channel_height, channel_length, channel_width, mean_velocity, diffusiophoretic_velocity)
     
     def get_diffusiophoretic_velocity(self) -> float:
         if self.has_variable("diffusiophoretic_velocity"):
             return self.get_value("diffusiophoretic_velocity")
         
-        beta_potential: float = self.get_beta_potential()
-        electrophoretic_mobility: float = self.get_electrophoretic_mobility()
-        chemiphoretic_mobility: float = self.get_chemiphoretic_mobility()
+        diffusiophoretic_mobility : float = self.get_diffusiophoretic_mobility()
         chemiphoretic_gradient: float = self.get_chemiphoretic_gradient()
-        return formula.diffusiophoretic_velocity(beta_potential, electrophoretic_mobility, chemiphoretic_mobility, chemiphoretic_gradient)
+        return formula.diffusiophoretic_velocity(diffusiophoretic_mobility, chemiphoretic_gradient)
 
     def get_beta_potential(self) -> float:
         if self.has_variable("beta_potential"):
@@ -89,6 +89,15 @@ class Equation():
             anion: float = self.get_value("anion")
             return formula.beta_potential(cation, anion)
 
+    def get_diffusiophoretic_mobility(self) -> float:
+        if self.has_variable("diffusiophoretic_mobility"):
+            return self.get_value("diffusiophoretic_mobility")
+        
+        beta_potential: float = self.get_beta_potential()
+        electrophoretic_mobility: float = self.get_electrophoretic_mobility()
+        chemiphoretic_mobility: float = self.get_chemiphoretic_mobility()
+        return formula.diffusiophoretic_mobility(electrophoretic_mobility, chemiphoretic_mobility, beta_potential)
+    
     def get_electrophoretic_mobility(self) -> float:
         if self.has_variable("electrophoretic_mobility"):
             return self.get_value("electrophoretic_mobility")
@@ -113,27 +122,26 @@ class Equation():
         if self.has_variable("chemiphoretic_gradient"):
             return self.get_value("chemiphoretic_gradient")
         
-        ci: float = self.get_value("ci")
-        cb: float = self.get_value("cb")
-        channel_length: float = self.get_value("channel_length")
-        return formula.chemiphoretic_gradient(ci, cb, channel_length)
+        c_initial: float = self.get_value("c_initial") #background concentration
+        channel_height: float = self.get_value("channel_height")
+        return formula.chemiphoretic_gradient(c_initial, channel_height)
 
     def get_channel_area(self) -> float:
         if self.has_variable("channel_area"):
             return self.get_value("channel_area")
         
         channel_height: float = self.get_value("channel_height")
-        channel_length: float = self.get_value("channel_length")
-        return formula.channel_area(channel_height, channel_length)
+        channel_width: float = self.get_value("channel_width")
+        return formula.channel_area(channel_height, channel_width)
     
     def get_characteristic_length(self) -> float:
         if self.has_variable("characteristic_length"):
             return self.get_value("characteristic_length")
         
         channel_height: float = self.get_value("channel_height")
-        channel_length: float = self.get_value("channel_length")
+        channel_width: float = self.get_value("channel_width")
 
-        return formula.characteristic_length(channel_height, channel_length)
+        return formula.characteristic_length(channel_height, channel_width)
 
     def is_laminar(self) -> bool:
         fluid_density: float = self.get_value("fluid_density")
