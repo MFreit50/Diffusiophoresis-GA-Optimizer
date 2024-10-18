@@ -9,7 +9,7 @@ from GA.mutation import Mutation
 from GA.selection import Selection
 
 class GeneticAlgorithm:
-    def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float, broadcaster):
+    def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float, broadcaster=None):
         """
         Initialize the Genetic Algorithm.
 
@@ -40,7 +40,7 @@ class GeneticAlgorithm:
         self.population: list = []
         self.fitness_scores: list = []
         self.best_equation: Equation = None
-        self.previous_best_equation: Equation = None
+        self.previous_best_fitness: float = 0
         self.cached_fitness: dict = {}
 
         self.broadcaster = broadcaster
@@ -68,7 +68,7 @@ class GeneticAlgorithm:
         """
         self.population = [Equation().randomize_equation() for _ in range(self.population_size)]
         self.fitness_scores = self.evaluate_population_fitness(self.population)
-    
+
     def evolve(self):
         """
         Evolve the population over several generations to optimize the solution.
@@ -82,13 +82,13 @@ class GeneticAlgorithm:
             - Mutation rate adjustment helps to avoid local optima.
             - Crossover and mutation methods need to be clearly defined to ensure meaningful offspring.
         """
-        #TODO: Write an exit function that stops the GA if no improvements are made for a long period
+        
+        no_improvement_counter: int = 0
+
         for generation in range(self.generations):
-            
-            self.previous_best_equation = copy.deepcopy(self.best_equation)
-            new_population: list = []
-            
+
             # Create a new population via selection, crossover, and mutation
+            new_population: list = []
             while len(new_population) < self.population_size:
                 parent1, parent2 = self.selection.select_parents(self.population, self.fitness_scores)
                 child1, child2 = self.crossover.crossover(self.crossover_rate, parent1, parent2)
@@ -106,12 +106,19 @@ class GeneticAlgorithm:
             sorted_population = self.sort_population_by_fitness(new_population, fitness_results)
             self.best_equation = sorted_population[0]
             
+            # Check for improvement 
+            should_stop: bool = False
+            should_stop, no_improvement_counter = self.check_for_improvement(self.previous_best_fitness, no_improvement_counter)
+            if should_stop:
+                print(f"Stopping due to no improvement for {no_improvement_counter} generations.")
+                break
+            
             # Adjust mutation rate based on fitness improvement
-            if self.previous_best_equation is not None:
+            if self.previous_best_fitness:
                 # Calculate the percentage improvement in fitness
                 fitness_improvement: float = ((self.evaluate_fitness(self.best_equation) 
-                                              - self.evaluate_fitness(self.previous_best_equation)) 
-                                              / abs(self.evaluate_fitness(self.previous_best_equation))) * 100
+                                              - self.previous_best_fitness) 
+                                              / abs(self.previous_best_fitness)) * 100
 
                 if fitness_improvement < 10:  # No significant improvement
                     self.mutation_rate = min(self.mutation_rate * 1.2, 0.5)  # Increase mutation rate
@@ -119,7 +126,7 @@ class GeneticAlgorithm:
                     self.mutation_rate = max(self.mutation_rate * 0.8, 0.01)  # Decrease mutation rate
                                 
                 print(f"Fitness improvement: {fitness_improvement:.2f}%")
-                print("Previous Best Fitness", self.evaluate_fitness(self.previous_best_equation))
+                print("Previous Best Fitness", self.previous_best_fitness)
                 print("Best Fitness", self.evaluate_fitness(self.best_equation))
                 print("Generations: ", generation)        
                 
@@ -131,10 +138,21 @@ class GeneticAlgorithm:
             else:
                 self.mutation_rate = max(self.mutation_rate * 0.9, 0.01)
                 pass  
-                  
+        
+            # Update the previous best fitness and broadcast data
+            self.previous_best_fitness = self.evaluate_fitness(self.best_equation)
             self.broadcast_data(generation, fitness_results)
 
-        print(self.best_equation)
+        print("Best Equation", self.best_equation)
+
+    def check_for_improvement(self, previous_best_fitness, no_improvement_counter):
+        max_no_improvement: int = 100
+        if self.evaluate_fitness(self.best_equation) > previous_best_fitness:
+            no_improvement_counter = 0
+            return False, no_improvement_counter
+        else:
+            no_improvement_counter += 1
+            return no_improvement_counter > max_no_improvement, no_improvement_counter
 
     def evaluate_population_fitness(self, population: list) -> list:
         """

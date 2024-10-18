@@ -35,7 +35,7 @@ class MainCoordinator:
         broadcaster.subscribe(gui)
 
         # Create and run the GA
-        ga = GeneticAlgorithm(generations=300, population_size=50, crossover_rate=0.7, mutation_rate=0.01, broadcaster=broadcaster)
+        ga = GeneticAlgorithm(generations=10000, population_size=50, crossover_rate=0.7, mutation_rate=0.01, broadcaster=broadcaster)
         
         # Run the GA in a separate thread to avoid blocking the GUI
         ga_thread = threading.Thread(target=ga.run)
