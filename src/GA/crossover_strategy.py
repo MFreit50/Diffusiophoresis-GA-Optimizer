@@ -32,15 +32,19 @@ class UniformCrossover(CrossoverStrategy):
 class SinglePointCrossover(CrossoverStrategy):
     def crossover(self, parent1 : Equation, parent2 : Equation) -> tuple[Equation, Equation]:
 
-        #aquire 1 variable from each parent
-        variable_1 = random.choice(parent1.get_variable_list(filter_constants=True))
-        variable_2 = random.choice(parent2.get_variable_list(filter_constants=True))
-
-        #switch the variable between parents to create child
-        child1 = parent1
-        child2 = parent2
-
-        child1.add_variable(variable_2)
-        child2.add_variable(variable_1)
+        # Get the genes of the parents
+        parent1_genes = parent1.get_variable_list()
+        parent2_genes = parent2.get_variable_list()
+        
+        child1 = Equation()
+        child2 = Equation()
+        
+        # Randomly select a crossover point
+        random_crossover_point = random.randint(1, len(parent1_genes)-1)
+        child1_genes = parent1_genes[:random_crossover_point] + parent2_genes[random_crossover_point:]
+        child2_genes = parent2_genes[:random_crossover_point] + parent1_genes[random_crossover_point:]
+        
+        child1.set_variable_list(child1_genes)
+        child2.set_variable_list(child2_genes)
 
         return child1, child2
