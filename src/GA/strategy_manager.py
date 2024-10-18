@@ -27,50 +27,59 @@ class StrategyManager:
         self.mutation_strategy: MutationStrategy = None
         self.crossover_strategy: CrossoverStrategy = None
         self.selection_strategy: SelectionStrategy = None   
-        
-        self.update_strategies(0, [], 0)     
-        
-    def update_strategies(self, diversity_score: float, fitness_scores: list, population_size: int):
-        
-        if diversity_score < population_size * 0.15:  # Low diversity
-            self.mutation_rate = min(self.mutation_rate * 1.1, 0.5)
-            pass
-        else:
-            self.mutation_rate = max(self.mutation_rate * 0.9, 0.01)
-            pass
-        
-        self.crossover_strategy = self.pick_crossover_strategy()
-        self.selection_strategy = self.pick_selection_strategy()
-        self.mutation_strategy = self.pick_mutation_strategy()
-    
+           
     def pick_mutation_strategy(self) -> MutationStrategy:
         # List of strategies and corresponding weights
         strategies: list[str] = ["randomize", "step", "step", "step"]
         choice: str = random.choice(strategies)
         choice: MutationStrategy = self.available_mutation_strategies[choice]
-        return choice
+        self.mutation_strategy = choice
     
     def pick_crossover_strategy(self) -> CrossoverStrategy:
         choice: CrossoverStrategy = random.choice(list(self.available_crossover_strategies.values()))
-        return choice
+        self.crossover_strategy = choice
     
     def pick_selection_strategy(self) -> SelectionStrategy:
         choice: SelectionStrategy = random.choice(list(self.available_selection_strategies.values()))
-        return choice   
+        self.selection_strategy = choice 
         
     def mutate(self, child: Equation) -> Equation:
+        self.pick_mutation_strategy()
         if np.random.rand() > self.mutation_rate:
             return child
-        return self.mutation_strategy.mutate(self.mutation_rate, child)
+        return self.mutation_strategy.mutate(child)
 
     def crossover(self, parent1: Equation, parent2: Equation) -> tuple[Equation, Equation]:
+        self.pick_crossover_strategy()
         if np.random.rand() > self.crossover_rate:
             return parent1, parent2
-        return self.crossover_strategy.crossover(self.crossover_rate, parent1, parent2)
+        return self.crossover_strategy.crossover(parent1, parent2)
     
     def select_parents(self, population: list[Equation], fitness_scores: list) -> tuple[Equation, Equation]:
+        self.pick_selection_strategy()
         return self.selection_strategy.select_parents(population, fitness_scores)
     
+    def update_mutation_rate_by_fitness(self, best_fitness: Equation, previous_best_fitness: float):
+        # Adjust mutation rate based on fitness improvement
+        if previous_best_fitness:
+            # Calculate the percentage improvement in fitness
+            fitness_improvement: float = ((best_fitness 
+                                        - previous_best_fitness) 
+                                        / abs(previous_best_fitness)) * 100
+
+            if fitness_improvement < 10:  # No significant improvement
+                self.mutation_rate = min(self.mutation_rate * 1.2, 0.5)  # Increase mutation rate
+            else:
+                self.mutation_rate = max(self.mutation_rate * 0.8, 0.01)  # Decrease mutation rate    
+    
+    def update_mutation_rate_by_diversity(self, diversity_score: float, population_size: int):
+        if diversity_score < 0.5:  # Low diversity
+            self.mutation_rate = min(self.mutation_rate * 1.1, 0.5)
+            pass
+        else:
+            self.mutation_rate = max(self.mutation_rate * 0.9, 0.01)
+            pass  
+        
     def get_mutation_rate(self) -> float:
         return self.mutation_rate
     

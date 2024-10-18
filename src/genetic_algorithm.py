@@ -4,9 +4,7 @@ import concurrent.futures
 import random
 from diffusiophoresis.equation import Equation
 from diffusiophoresis.variable import Variable
-from GA.crossover import Crossover
-from GA.mutation import Mutation
-from GA.selection import Selection
+from GA.strategy_manager import StrategyManager
 
 class GeneticAlgorithm:
     def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float, broadcaster=None):
@@ -28,11 +26,9 @@ class GeneticAlgorithm:
             best_equation (Equation): The best solution (Equation) found during evolution based on fitness.
             cached_fitness (dict): A cache that stores pre-calculated fitness scores of individuals for performance optimization.
         """
+        
         #Components
-        self.mutation = Mutation()
-        self.crossover = Crossover()
-        self.selection = Selection()
-
+        self.strategy_manager = StrategyManager(crossover_rate=crossover_rate, mutation_rate=mutation_rate)
         self.generations: int = generations
         self.population_size: int = population_size
         self.crossover_rate: float = crossover_rate
@@ -90,10 +86,10 @@ class GeneticAlgorithm:
             # Create a new population via selection, crossover, and mutation
             new_population: list = []
             while len(new_population) < self.population_size:
-                parent1, parent2 = self.selection.select_parents(self.population, self.fitness_scores)
-                child1, child2 = self.crossover.crossover(self.crossover_rate, parent1, parent2)
-                child1 = self.mutation.mutate(self.mutation_rate, child1)
-                child2 = self.mutation.mutate(self.mutation_rate, child2)
+                parent1, parent2 = self.strategy_manager.select_parents(self.population, self.fitness_scores)
+                child1, child2 = self.strategy_manager.crossover(parent1, parent2)
+                child1 = self.strategy_manager.mutate(child1)
+                child2 = self.strategy_manager.mutate(child2)
                 new_population.extend([child1, child2])
 
             self.population = new_population
@@ -113,31 +109,11 @@ class GeneticAlgorithm:
                 print(f"Stopping due to no improvement for {no_improvement_counter} generations.")
                 break
             
-            # Adjust mutation rate based on fitness improvement
-            if self.previous_best_fitness:
-                # Calculate the percentage improvement in fitness
-                fitness_improvement: float = ((self.evaluate_fitness(self.best_equation) 
-                                              - self.previous_best_fitness) 
-                                              / abs(self.previous_best_fitness)) * 100
-
-                if fitness_improvement < 10:  # No significant improvement
-                    self.mutation_rate = min(self.mutation_rate * 1.2, 0.5)  # Increase mutation rate
-                else:
-                    self.mutation_rate = max(self.mutation_rate * 0.8, 0.01)  # Decrease mutation rate
-                                
-                print(f"Fitness improvement: {fitness_improvement:.2f}%")
-                print("Previous Best Fitness", self.previous_best_fitness)
-                print("Best Fitness", self.evaluate_fitness(self.best_equation))
-                print("Generations: ", generation)        
-                
-            # Adjust mutation rate based on population diversity
-            unique_fitness_results = len(set(fitness_results))
-            if unique_fitness_results < self.population_size * 0.50:  # Low diversity
-                self.mutation_rate = min(self.mutation_rate * 1.1, 0.5)
-                pass
-            else:
-                self.mutation_rate = max(self.mutation_rate * 0.9, 0.01)
-                pass  
+            # Update the mutation rate based on fitness and diversity
+            best_fitness: float = self.evaluate_fitness(self.best_equation) 
+            diversity_score = len(set(fitness_results))/self.population_size
+            self.strategy_manager.update_mutation_rate_by_fitness(best_fitness, self.previous_best_fitness)  
+            self.strategy_manager.update_mutation_rate_by_diversity(diversity_score, self.population_size)  
         
             # Update the previous best fitness and broadcast data
             self.previous_best_fitness = self.evaluate_fitness(self.best_equation)
@@ -146,7 +122,7 @@ class GeneticAlgorithm:
         print("Best Equation", self.best_equation)
 
     def check_for_improvement(self, previous_best_fitness, no_improvement_counter):
-        max_no_improvement: int = 100
+        max_no_improvement: int = 30
         if self.evaluate_fitness(self.best_equation) > previous_best_fitness:
             no_improvement_counter = 0
             return False, no_improvement_counter
@@ -210,7 +186,7 @@ class GeneticAlgorithm:
         data = {
                 "generation": generation + 1,
                 "best_fitness": self.evaluate_fitness(self.best_equation),
-                "mutation_rate": self.mutation_rate,
+                "mutation_rate": self.strategy_manager.get_mutation_rate(),
                 "unique_fitness_scores": len(set(fitness_results))
             }
             

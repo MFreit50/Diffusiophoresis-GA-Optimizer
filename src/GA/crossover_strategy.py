@@ -5,14 +5,11 @@ from diffusiophoresis.equation import Equation
 
 class CrossoverStrategy(ABC):
     @abstractmethod
-    def crossover(self, crossover_rate: float, parent1: Equation, parent2: Equation) -> tuple[Equation, Equation]:
+    def crossover(self, parent1: Equation, parent2: Equation) -> tuple[Equation, Equation]:
         pass
 
 class UniformCrossover(CrossoverStrategy):
-    def crossover(self, crossover_rate: float, parent1: Equation, parent2: Equation) -> tuple[Equation, Equation]:
-
-        if np.random.rand() > crossover_rate:
-            return parent1, parent2
+    def crossover(self, parent1: Equation, parent2: Equation) -> tuple[Equation, Equation]:
 
         parent1_vars = parent1.get_variable_list()
         parent2_vars = parent2.get_variable_list()
@@ -33,10 +30,7 @@ class UniformCrossover(CrossoverStrategy):
         return child1, child2
 
 class SinglePointCrossover(CrossoverStrategy):
-    def crossover(self, crossover_rate: float, parent1 : Equation, parent2 : Equation) -> tuple[Equation, Equation]:
-
-        if np.random.rand() > crossover_rate:
-            return parent1, parent2
+    def crossover(self, parent1 : Equation, parent2 : Equation) -> tuple[Equation, Equation]:
 
         #aquire 1 variable from each parent
         variable_1 = random.choice(parent1.get_variable_list(filter_constants=True))

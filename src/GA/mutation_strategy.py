@@ -6,19 +6,15 @@ from abc import ABC, abstractmethod
 
 class MutationStrategy(ABC):
     @abstractmethod
-    def mutate(self, mutation_rate: float, child: Equation) -> Equation:
+    def mutate(self, child: Equation) -> Equation:
         pass
 
 class RandomizeMutation(MutationStrategy):
-    def mutate(self, mutation_rate: float, child: Equation) -> Equation:
-        if np.random.rand() > mutation_rate:
-            return child
+    def mutate(self, child: Equation) -> Equation:
         return child.randomize_equation()
     
 class StepMutation(MutationStrategy):
-    def mutate(self, mutation_rate: float, child: Equation) -> Equation:
-        if np.random.rand() > mutation_rate:
-            return child
+    def mutate(self, child: Equation) -> Equation:
         
         # Get non constant variables from equation
         variable_list: list[Variable] = child.get_variable_list(filter_constants=True)
