@@ -34,7 +34,7 @@ class ScrollableFrame(ttk.Frame):
 
 
 class GA_GUI:
-    def __init__(self, root, store_all_data=False):
+    def __init__(self, root, store_all_data=True):
         self.root = root
         self.root.title("GA Progress")
         self.root.geometry("1400x800")  # Wider and taller window size
