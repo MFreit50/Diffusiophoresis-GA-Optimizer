@@ -19,13 +19,7 @@ class MainCoordinator:
         pass
 
     def initialize(self):
-        print("test")
-        VariableDefinitions.variables = {
-            "beta_potential": Variable(variable_name="beta_potential", value=25.0, is_constant=False, min_range=10.0, max_range=50.0),
-            "electrophoretic_mobility": Variable(variable_name="electrophoretic_mobility", value=0.001, is_constant=False, min_range=0.0001, max_range=0.01),
-            "chemiphoretic_mobility": Variable(variable_name="chemiphoretic_mobility", value=0.001, is_constant=False, min_range=0.0001, max_range=0.01),
-            "chemiphoretic_gradient": Variable(variable_name="chemiphoretic_gradient", value=0.01, is_constant=False, min_range=0.001, max_range=0.1),
-        }
+        VariableDefinitions.load_rastrigin()
 
         root = tk.Tk()
         gui = GA_GUI(root)
@@ -35,7 +29,7 @@ class MainCoordinator:
         broadcaster.subscribe(gui)
 
         # Create and run the GA
-        ga = GeneticAlgorithm(generations=300, population_size=50, crossover_rate=0.7, mutation_rate=0.01, broadcaster=broadcaster)
+        ga = GeneticAlgorithm(generations=1000, population_size=10000, crossover_rate=0.8, mutation_rate=0.01, broadcaster=broadcaster)
         
         # Run the GA in a separate thread to avoid blocking the GUI
         ga_thread = threading.Thread(target=ga.run)
