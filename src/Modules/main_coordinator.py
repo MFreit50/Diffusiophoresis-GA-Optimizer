@@ -19,13 +19,7 @@ class MainCoordinator:
         pass
 
     def initialize(self):
-        print("test")
-        VariableDefinitions.variables = {
-            "beta_potential": Variable(variable_name="beta_potential", value=25.0, is_constant=False, min_range=10.0, max_range=50.0),
-            "electrophoretic_mobility": Variable(variable_name="electrophoretic_mobility", value=0.001, is_constant=False, min_range=0.0001, max_range=0.01),
-            "chemiphoretic_mobility": Variable(variable_name="chemiphoretic_mobility", value=0.001, is_constant=False, min_range=0.0001, max_range=0.01),
-            "chemiphoretic_gradient": Variable(variable_name="chemiphoretic_gradient", value=0.01, is_constant=False, min_range=0.001, max_range=0.1),
-        }
+        VariableDefinitions.load_rastrigin()
 
         root = tk.Tk()
         gui = GA_GUI(root)
