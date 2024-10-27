@@ -1,6 +1,6 @@
-from GA.mutation_strategy import *
-from GA.crossover_strategy import *
-from GA.selection_strategy import *
+from ga.mutation_strategy import *
+from ga.crossover_strategy import *
+from ga.selection_strategy import *
 
 '''
     StrategyManager class is responsible for managing the mutation, crossover, and selection strategies.

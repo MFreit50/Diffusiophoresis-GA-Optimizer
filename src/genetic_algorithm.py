@@ -4,7 +4,7 @@ import concurrent.futures
 import random
 from diffusiophoresis.equation import Equation
 from diffusiophoresis.variable import Variable
-from GA.strategy_manager import StrategyManager
+from ga.strategy_manager import StrategyManager
 
 class GeneticAlgorithm:
     def __init__(self, generations: int, population_size: int, crossover_rate: float, mutation_rate: float, broadcaster=None):
