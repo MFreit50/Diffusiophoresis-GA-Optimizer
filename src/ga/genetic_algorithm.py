@@ -157,10 +157,9 @@ class GeneticAlgorithm:
             bool: True if the termination condition is met, otherwise False.
         """
         max_no_improvement: int = 100
-        no_improvement_counter: int = self.data_aggregator.get("no_improvement_counter")
 
-        if no_improvement_counter > max_no_improvement:
-            print(f"Stopping due to no improvement for {no_improvement_counter} generations.")
+        if self.no_improvement_counter >= max_no_improvement:
+            print(f"Stopping due to no improvement for {self.no_improvement_counter} generations.")
             return True
         return False
 
