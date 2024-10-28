@@ -204,13 +204,13 @@ class GA_GUI:
         generation = data['generation']
         best_fitness = data['best_fitness']
         mutation_rate = data['mutation_rate']
-        unique_fitness_results = data['unique_fitness_scores']
+        unique_individuals_count = data['unique_individuals_count']
 
         # Append the new data
         self.generation_list.append(generation)
         self.best_fitness_list.append(best_fitness)
         self.mutation_rate_list.append(mutation_rate)
-        self.unique_fitness_list.append(unique_fitness_results)
+        self.unique_fitness_list.append(unique_individuals_count)
 
         # Only enforce memory limit if store_all_data is False
         if not self.store_all_data and len(self.generation_list) > self.max_generations_memory:
@@ -235,7 +235,7 @@ class GA_GUI:
         self.console.insert(tk.END, f'\nGeneration {generation}\n')
         self.console.insert(tk.END, f'Best Fitness: {best_fitness}\n')
         self.console.insert(tk.END, f'Mutation Rate: {mutation_rate:.3f}\n')
-        self.console.insert(tk.END, f'Unique Fitness Scores: {unique_fitness_results}\n')
+        self.console.insert(tk.END, f'Unique Individuals: {unique_individuals_count}\n')
         self.console.yview(tk.END)  # Auto scroll to the latest entry
     
     def on_closing(self):
