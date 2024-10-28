@@ -4,13 +4,29 @@ import time
 import psutil
 from diffusiophoresis.equation import Equation
 
-class ProgressAnalyzer():
+class ProgressAnalyzer:
     def __init__(self):
-        self.best_individual : Equation = None
-        self.previous_best_individual : Equation = None
+        """
+        Initializes the ProgressAnalyzer class to track and analyze the progress of genetic algorithm generations.
+        
+        Attributes:
+            best_individual (Equation): The best individual (equation) from the population.
+            previous_best_individual (Equation): The best individual from the previous generation.
+            best_individual_fitness (float): Fitness score of the best individual.
+            previous_best_individual_fitness (float): Fitness score of the previous best individual.
+            no_improvement_counter (int): Number of generations without improvement.
+            fitness_improvement (float): Improvement percentage in the fitness score.
+            unique_individuals_count (int): Count of unique individuals in the population.
+            generation_start_time (float): Start time of the current generation.
+            generation_end_time (float): End time of the current generation.
+            start_time (float): Time at which the analysis began.
+            process (psutil.Process): Process object to monitor memory usage.
+        """
+        self.best_individual: Equation = None
+        self.previous_best_individual: Equation = None
 
-        self.best_individual_fitness : float = None
-        self.previous_best_individual_fitness : float = None
+        self.best_individual_fitness: float = None
+        self.previous_best_individual_fitness: float = None
 
         self.no_improvement_counter: int = 0
 
@@ -22,7 +38,17 @@ class ProgressAnalyzer():
         self.start_time = time.time()
         self.process = psutil.Process()
     
-    def analyze(self, population, fitness_scores):
+    def analyze(self, population: list, fitness_scores: list) -> dict:
+        """
+        Analyzes the current generation, updates progress statistics, and returns a dictionary with analysis data.
+        
+        Args:
+            population (list): The current population of equations.
+            fitness_scores (list): Fitness scores corresponding to each individual in the population.
+        
+        Returns:
+            dict: Dictionary containing statistics for the current generation.
+        """
         sorted_population, sorted_fitness_scores = self.sort_population_by_fitness(population, fitness_scores)
 
         # Update Best Individual
@@ -31,7 +57,7 @@ class ProgressAnalyzer():
         self.best_individual = sorted_population[0]
         self.best_individual_fitness = sorted_fitness_scores[0]
 
-        # Calculate Progress Stagnance
+        # Calculate Progress Stagnation
         if self.previous_best_individual_fitness is not None:
             if self.previous_best_individual_fitness == self.best_individual_fitness:
                 self.no_improvement_counter += 1
@@ -50,7 +76,7 @@ class ProgressAnalyzer():
         self.unique_individuals_count = len(unique_individuals)
         self.unique_individuals_percentage = self.unique_individuals_count / len(population)
 
-        # Calculate Improvement and Mutation Rate
+        # Calculate Improvement
         if self.previous_best_individual is not None:
             fitness_improvement = self._calculate_fitness_improvement()
         else:
@@ -62,7 +88,7 @@ class ProgressAnalyzer():
         generation_end_time = current_time - self.generation_start_time
         self.generation_start_time = current_time
 
-        #Track Memory Usage
+        # Track Memory Usage
         memory_mb = self.process.memory_info().rss / (1024 ** 2)
 
         # Aggregate Data into a Dictionary
@@ -83,17 +109,30 @@ class ProgressAnalyzer():
 
         return data
     
-    def sort_population_by_fitness(self, population, fitness_scores):
-            """
-            Returns a new population sorted by their fitness scores in descending order.
-            """
-            paired_population = list(zip(fitness_scores, population))
-            sorted_population = sorted(paired_population, key=lambda x: x[0], reverse=True)
+    def sort_population_by_fitness(self, population: list, fitness_scores: list) -> tuple:
+        """
+        Sorts the population based on their fitness scores in descending order.
+        
+        Args:
+            population (list): List of individuals in the population.
+            fitness_scores (list): Corresponding fitness scores for each individual.
+        
+        Returns:
+            tuple: Sorted fitness scores and sorted population as separate lists.
+        """
+        paired_population = list(zip(fitness_scores, population))
+        sorted_population = sorted(paired_population, key=lambda x: x[0], reverse=True)
 
-            sorted_fitness_scores = [fitness for _, fitness in sorted_population]
-            sorted_individuals = [individual for individual, _ in sorted_population]
+        sorted_fitness_scores = [fitness for fitness, _ in sorted_population]
+        sorted_individuals = [individual for _, individual in sorted_population]
 
-            return sorted_fitness_scores, sorted_individuals
+        return sorted_individuals, sorted_fitness_scores
 
-    def _calculate_fitness_improvement(self):
+    def _calculate_fitness_improvement(self) -> float:
+        """
+        Calculates the percentage improvement in fitness score of the best individual over the previous best.
+        
+        Returns:
+            float: Percentage fitness improvement.
+        """
         return (((self.best_individual_fitness) - (self.previous_best_individual_fitness)) / abs(self.previous_best_individual_fitness)) * 100
