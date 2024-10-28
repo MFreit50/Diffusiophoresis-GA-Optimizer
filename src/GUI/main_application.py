@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-from variable_entry import VariableEntry
+from GUI.variable_entry import VariableEntry
 
 class MainApplication(tk.Tk):
     def __init__(self, variable_list, coordinator):

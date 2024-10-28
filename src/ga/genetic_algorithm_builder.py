@@ -1,6 +1,6 @@
 from ga.strategy_manager import StrategyManager
 from ga.data_aggregator import DataAggregator
-from ga.data_broadcaster import DataBroadcaster
+from Modules.data_broadcaster import DataBroadcaster
 from ga.progress_analyzer import ProgressAnalyzer
 from ga.genetic_algorithm import GeneticAlgorithm
 

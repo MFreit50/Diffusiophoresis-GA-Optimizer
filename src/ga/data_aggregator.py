@@ -1,4 +1,4 @@
-from ga.data_broadcaster import DataBroadcaster
+from Modules.data_broadcaster import DataBroadcaster
 from ga.progress_analyzer import ProgressAnalyzer
 class DataAggregator():
     def __init__(self, data_broadcaster, progress_analyzer):
