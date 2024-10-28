@@ -1,17 +1,12 @@
-import os
-import sys
 import tkinter as tk
 import threading
-#from data_engine import DataEngine
-#from main_application import MainApplication
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(parent_dir)
 from diffusiophoresis.equation import Equation
-from genetic_algorithm import GeneticAlgorithm
+from ga.genetic_algorithm import GeneticAlgorithm
 from diffusiophoresis.variable_definitions import VariableDefinitions
 from diffusiophoresis.variable import Variable
-from data_broadcaster import DataBroadcaster
-from ga_gui import GA_GUI
+from Modules.data_broadcaster import DataBroadcaster
+from GUI.ga_gui import GA_GUI
+from ga.genetic_algorithm_builder import GeneticAlgorithmBuilder
 
 class MainCoordinator:
     def __init__(self) -> None:
@@ -24,12 +19,11 @@ class MainCoordinator:
         root = tk.Tk()
         gui = GA_GUI(root)
 
-        # Create the broadcaster
-        broadcaster = DataBroadcaster()
-        broadcaster.subscribe(gui)
 
         # Create and run the GA
-        ga = GeneticAlgorithm(generations=10000, population_size=50, crossover_rate=0.7, mutation_rate=0.01, broadcaster=broadcaster)
+        ga_builder = GeneticAlgorithmBuilder(generations=10000, population_size=1000)
+        ga = ga_builder.build()
+        ga.subscribe(gui)
         
         # Run the GA in a separate thread to avoid blocking the GUI
         ga_thread = threading.Thread(target=ga.run)
