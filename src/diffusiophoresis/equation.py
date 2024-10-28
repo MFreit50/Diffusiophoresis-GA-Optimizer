@@ -1,3 +1,5 @@
+import sys
+import numpy as np
 from diffusiophoresis.variable import Variable
 from diffusiophoresis.diffusiophoresis_formulas import DiffusiophoresisFormulas as formula
 from diffusiophoresis.variable_definitions import VariableDefinitions
@@ -56,22 +58,26 @@ class Equation():
             self.set_variable(variable)
 
     ##Calculations
+    '''
     def optimize(self) -> float:
         #defines what this equation aims to optimize
         return self.get_exclusion_zone_area() #TODO *clean flow rate (not implemented)
-    
-    def get_exclusion_zone_area(self) -> float:
-        if self.has_variable("exclusion_zone_area"):
-            return self.get_value("exclusion_zone_area")
+    '''
+    ##Calculations
+    def optimize(self) -> float:
+        #defines what this equation aims to optimize
+        A = self.get_value("A")
+        n = self.get_value("n")
+        X = self.get_value("X")
+        Y = self.get_value("Y")
+      
+        Z = A * n + (X**2 - A * np.cos(2 * np.pi * X)) + (Y**2 - A * np.cos(2 * np.pi * Y))
+        #Z = min( (np.sin(X) + np.sin(2*X) + X + 1/np.cos(X) ), ( np.sin(X) - np.sin(2*X) - (X * (1/np.cos(X)))) )
+        if Z == 0:
+            return sys.float_info.max
+        return 1/Z
+        #return self.get_exclusion_zone_area() #TODO *clean flow rate (not implemented)
         
-        channel_height: float = self.get_value("channel_height")
-        channel_length: float = self.get_value("channel_length")
-        channel_width: float = self.get_value("channel_width")
-
-        mean_velocity: float = 1 #need to get this value
-        diffusiophoretic_velocity: float = self.get_diffusiophoretic_velocity()
-        return formula.exclusion_zone_area(channel_height, channel_length, channel_width, mean_velocity, diffusiophoretic_velocity)
-    
     def get_diffusiophoretic_velocity(self) -> float:
         if self.has_variable("diffusiophoretic_velocity"):
             return self.get_value("diffusiophoretic_velocity")
