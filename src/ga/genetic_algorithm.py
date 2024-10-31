@@ -86,8 +86,12 @@ class GeneticAlgorithm:
 
             if self.evaluate_termination():
                 break
-
-        print(self.best_equation)
+        
+        print("before binary search")
+        print(self.best_equation, self.best_equation.optimize())
+        print("after binary search")
+        self.best_equation = self.binary_search(self.best_equation)
+        print(self.best_equation, self.best_equation.optimize())
 
     def update_best_equation(self) -> None:
         """
@@ -204,3 +208,39 @@ class GeneticAlgorithm:
             bool: True if all objects have unique memory addresses, otherwise False.
         """
         return len(objects) == len(set(id(obj) for obj in objects))
+    
+    def binary_search(self, individual : Equation):
+
+        def bs(low, middle, high, individual : Equation, var : Variable) -> Equation:
+            def optimize(individual : Equation, var : Variable, value : float) -> float:
+                var.set_value(value)
+                individual.set_variable(var)
+                return individual.optimize()
+            
+            if low == middle or high == middle:
+                var.set_value(middle)
+                individual.set_variable(var)
+                return individual
+            
+            new_low = (middle+low)/2
+            new_high = (middle+high)/2
+            
+            new_low_score = optimize(individual, var, new_low)
+            new_high_score = optimize(individual, var, new_high)
+
+            if new_low_score > new_high_score:
+                return bs(low, new_low, middle, individual, var)
+            else:
+                return bs(middle, new_high, high, individual, var)
+        
+        variable_list = individual.get_variable_list(filter_constants=True)
+
+        for var in variable_list:
+
+            middle = var.get_value()
+            low = middle - 0.1 if var.is_within_range(middle - 0.1) else middle
+            high= middle + 0.1 if var.is_within_range(middle + 0.1) else middle
+
+            individual = bs(low, middle, high, individual, var)
+
+        return individual
