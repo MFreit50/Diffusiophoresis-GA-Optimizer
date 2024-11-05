@@ -33,11 +33,11 @@ class GeneticAlgorithm:
         self.population_size: int = population_size
         self.population: List[Equation] = []
         self.fitness_scores: List[float] = []
-        self.best_equation: Equation = None
+        self.best_equation: Equation = Equation()
         self.cached_fitness: dict = {}
 
         self.no_improvement_counter: int = 0
-        self.previous_best_equation: Equation = None
+        self.last_best_equations: List[Equation] = []
     
     def run(self) -> Equation:
         """
@@ -98,13 +98,17 @@ class GeneticAlgorithm:
         Update the best equation based on the current population.
         """
         sorted_population = self.sort_population_by_fitness(self.population, self.fitness_scores)
-        self.previous_best_equation = copy.deepcopy(self.best_equation)
+        self.last_best_equations.append(copy.deepcopy(self.best_equation))
+        
         self.best_equation = sorted_population[0]
-
-        if self.previous_best_equation == self.best_equation:
+        
+        if self.last_best_equations[-1] == self.best_equation:
             self.no_improvement_counter += 1
         else:
             self.no_improvement_counter = 0
+            
+        if len(self.last_best_equations) > 30:
+            self.last_best_equations.pop(0)    
 
     def evaluate_population_fitness(self, population: List[Equation]) -> List[float]:
         """
