@@ -58,7 +58,7 @@ class StrategyManager():
         choice: SelectionStrategy = random.choice(list(self.available_selection_strategies.values()))
         return choice   
         
-    def mutate(self, population: Equation) -> Equation:
+    def mutate(self, population: Equation, bounds) -> Equation:
         mutated_population = []
 
         for individual in population:
@@ -66,7 +66,7 @@ class StrategyManager():
                 mutated_population.append(individual)
             else:
                 self.mutation_strategy = self.pick_mutation_strategy()
-                mutated_individual = self.mutation_strategy.mutate(individual)
+                mutated_individual = self.mutation_strategy.mutate(individual, bounds)
                 mutated_population.append(mutated_individual)
 
         return mutated_population
@@ -84,7 +84,7 @@ class StrategyManager():
         
         return offspring
     
-    def select_parents(self, population: list[Equation], fitness_scores: list) -> tuple[Equation, Equation]:
+    def select_parents(self, population: list[float], fitness_scores: list) -> list:
         selected_population = []
 
         while len(selected_population)*2 < len(population):

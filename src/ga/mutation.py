@@ -5,7 +5,7 @@ from diffusiophoresis.variable import Variable
 
 
 class Mutation:
-    def mutate(self, mutation_rate: float, child: Equation) -> Equation:
+    def mutate(self, mutation_rate: float, individual: list) -> list:
         """
         Mutate a child equation to introduce variation.
 
@@ -24,7 +24,7 @@ class Mutation:
         #TODO Have mutate() handle an input of an array of Equations
 
         if np.random.rand() > mutation_rate:
-            return child
+            return individual
         
         methods = ["randomize", "step", "step", "step"]
         method = random.choice(methods)
@@ -32,25 +32,29 @@ class Mutation:
 
         ##code below does not function as intended
         if(method == "randomize"):
-            return self.randomize_mutation(child)
+            return self.randomize_mutation(individual)
         elif(method == "step"):
-            return self.step_mutation(child)
+            return self.step_mutation(individual)
         else:
             raise NotImplementedError("This mutation method is either invalid or not implemented yet!")
 
-    def randomize_mutation(self, child: Equation) -> Equation:
-        return child.randomize_equation()
+    def randomize_mutation(self, individual: list, bounds: list[tuple]) -> list:
+        individual.clear()
 
-    def step_mutation(self, child: Equation) -> Equation:
-        # Get non constant variables from equation
-        variable_list: list[Variable] = child.get_variable_list(filter_constants=True)
+        # For each variable, generate a random value within the given bounds
+        for lower, upper in bounds:
+            randomized_value = np.random.uniform(lower, upper)
+            individual.append(randomized_value)
         
-        # Choose a variable randomly
-        chosen_variable: Variable = random.choice(variable_list)
+        return individual
+
+    def step_mutation(self, individual: list, bounds: list[tuple]) -> list:
+        # Choose an index randomly
+        i = random.randint(0, len(individual) - 1)
         
         # Get the max and min range of the chosen variable
-        chosen_variable_max: float = chosen_variable.get_max_range()
-        chosen_variable_min: float = chosen_variable.get_min_range()
+        chosen_variable_max: float = bounds[i][1]
+        chosen_variable_min: float = bounds[i][0]
         
         # Calculate the step size and value for the mutation
         step_factor: float = 0.1
@@ -58,11 +62,10 @@ class Mutation:
         step_value: float = random.uniform(-step_size, step_size)
         
         # Ensure the new value stays within the bounds of max/min range
-        new_value: float = np.clip(chosen_variable.get_value() + step_value, 
+        new_value: float = np.clip(individual[i] + step_value, 
                                    chosen_variable_min, 
                                    chosen_variable_max)
         
-        chosen_variable.set_value(new_value)
-        child.add_variable(chosen_variable)
+        individual[i] = new_value
         
-        return child
+        return individual

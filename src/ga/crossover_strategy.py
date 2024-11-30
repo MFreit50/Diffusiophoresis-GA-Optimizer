@@ -1,44 +1,37 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import random # TODO Remove this import and use numpy instead
-from diffusiophoresis.equation import Equation
 
 class CrossoverStrategy(ABC):
     @abstractmethod
-    def crossover(self, parent1: Equation, parent2: Equation) -> tuple[Equation, Equation]:
+    def crossover(self, parent1, parent2):
         pass
 
 class UniformCrossover(CrossoverStrategy):
-    def crossover(self, parent1: Equation, parent2: Equation) -> tuple[Equation, Equation]:
-        parent1_vars = parent1.get_variable_list()
-        parent2_vars = parent2.get_variable_list()
-
+    def crossover(self, parent1, parent2):
         # TODO: Debug: Check if both parents have the same variables for crossover
 
-        child1 = Equation()
-        child2 = Equation()
+        child1 = []
+        child2 = []
 
-        for i in range(len(parent1_vars)):
+        for i in range(len(parent1)):
             if np.random.rand() < 0.5:
-                child1.add_variable(parent1_vars[i])
-                child2.add_variable(parent2_vars[i])
+                child1.append(parent1[i])
+                child2.append(parent2[i])
             else:
-                child1.add_variable(parent2_vars[i])
-                child2.add_variable(parent1_vars[i])
+                child1.append(parent2[i])
+                child2.append(parent1[i])
 
         return child1, child2
 
 class SinglePointCrossover(CrossoverStrategy):
-    def crossover(self, parent1 : Equation, parent2 : Equation) -> tuple[Equation, Equation]:
-        #aquire 1 variable from each parent
-        variable_1 = random.choice(parent1.get_variable_list(filter_constants=True))
-        variable_2 = random.choice(parent2.get_variable_list(filter_constants=True))
+    def crossover(self, parent1 : list, parent2 : list):
+        if len(parent1) != len(parent2):
+            print("len1: ", len(parent1), " len2: ", len(parent2))
+            raise ValueError("Parents must have the same length")
 
-        #switch the variable between parents to create child
-        child1 = parent1
-        child2 = parent2
-
-        child1.add_variable(variable_2)
-        child2.add_variable(variable_1)
+        crossover_point = random.randint(1, len(parent1) - 1)
+        child1 = parent1[:crossover_point] + parent2[crossover_point:]
+        child2 = parent2[:crossover_point] + parent1[crossover_point:]
 
         return child1, child2

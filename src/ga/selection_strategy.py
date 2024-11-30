@@ -1,5 +1,7 @@
 import copy
 import random
+
+import numpy as np
 from diffusiophoresis.equation import Equation
 from abc import ABC, abstractmethod
 
@@ -16,7 +18,7 @@ class TournamentSelection(SelectionStrategy):
         parent2 = copy.deepcopy(parent2)
         return parent1, parent2
 
-    def tournament_selection(self, population: list, fitness_scores: list, tournament_size: int) -> tuple[Equation, Equation]:
+    def tournament_selection(self, population: list, fitness_scores: list, tournament_size: int) -> list:
         def tournament_select_parent():
             tournament_contestants_indices = random.sample(range(len(population)), tournament_size)
             best_contestant_index = max(tournament_contestants_indices, key=lambda idx: fitness_scores[idx])
@@ -24,9 +26,10 @@ class TournamentSelection(SelectionStrategy):
         
         parent1 = tournament_select_parent()
         parent2 = tournament_select_parent()
+        '''
         while parent1 == parent2:
             parent2 = tournament_select_parent()
-            
+        '''
         return parent1, parent2
 
 class RouletteSelection(SelectionStrategy):
