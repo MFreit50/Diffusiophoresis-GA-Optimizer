@@ -1,0 +1,6 @@
+
+/.vscode
+/src/diffusiophoresis/__pycache__
+*.pyc
+*.pyc
+/src/GUI/__pycache__
