@@ -4,3 +4,4 @@
 *.pyc
 *.pyc
 /src/GUI/__pycache__
+benchmark_report.json
