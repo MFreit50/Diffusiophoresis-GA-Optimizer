@@ -1,5 +1,5 @@
-from functions.ackley import Ackley
+from functions.sphere import Sphere
 from interfaces.test_function import TestFunction
-class AckleyTest(Ackley, TestFunction):
+class SphereTest(Sphere, TestFunction):
     def solution(self):
         return [0,0]
