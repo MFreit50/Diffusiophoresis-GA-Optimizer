@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
 class TestFunction(ABC):
     
-    def get_solution() -> list:
+    def solution(self) -> list:
         pass

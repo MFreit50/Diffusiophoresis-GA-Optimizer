@@ -2,20 +2,13 @@ from interfaces.function import Function
 from diffusiophoresis.variable import Variable
 class Sphere(Function):
 
-    def evaluate(self, equation):
-        x = equation.get_value("x")
-        y = equation.get_value("y")
-        return self.evaluate_coordinates(x,y)
+    def evaluate(self, x, *args):
+        x1 = x[0]
+        x2 = x[1]
+        return x1**2 + x2**2
     
-    def evaluate_coordinates(self, *args):
-        x, y = args
-        return x**2 + y**2
-    
-    def get_variables(self):
-        return self.variables
-    
-    def _define_variables(self):
-        self.variables = {
-            "x": Variable(variable_name="x", value=1, is_constant=False, min_range=-5.12, max_range=5.12),
-            "y": Variable(variable_name="y", value=1, is_constant=False, min_range=-5.12, max_range=5.12)
-        }
+    def get_parameters(self):
+        func = self.evaluate
+        bounds = [(-5.12,5.12)]*2
+        args = None
+        return (func, bounds, args)
