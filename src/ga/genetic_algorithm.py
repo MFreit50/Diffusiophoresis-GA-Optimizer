@@ -6,18 +6,19 @@ from ga.strategy_manager import StrategyManager
 from ga.data_aggregator import DataAggregator
 from scipy._lib._util import _FunctionWrapper, MapWrapper
 
-def genetic_algorithm(func: callable, bounds: list[tuple], args: tuple = (), generations: int = 1000, population_size: int = 15, data_aggregator: Optional[DataAggregator] = None):
-    with GeneticAlgorithm(func,bounds,args,generations,population_size,data_aggregator) as genetic_algorithm:
+def genetic_algorithm(func: callable, bounds: list[tuple], args: tuple = (), generations: int = 1000, population_size: int = 15, maximize = False, data_aggregator: Optional[DataAggregator] = None):
+    with GeneticAlgorithm(func,bounds,args,generations,population_size,maximize,data_aggregator) as genetic_algorithm:
         ret = genetic_algorithm.optimize()
     return ret
 
 class GeneticAlgorithm:
-    def __init__(self, func: callable, bounds: list[tuple], args: tuple = (), generations: int = 1000, population_size: int = 15, data_aggregator: Optional[DataAggregator] = None):
+    def __init__(self, func: callable, bounds: list[tuple], args: tuple = (), generations: int = 1000, population_size: int = 15, maximize = False, data_aggregator: Optional[DataAggregator] = None):
         self.func: _FunctionWrapper = _FunctionWrapper(func, args)
         self.bounds: list[tuple] = bounds
         self.num_variables: int = len(bounds)
 
         self.strategy_manager = StrategyManager()
+        self.optimize_mode = maximize
         self.data_aggregator = data_aggregator
 
         self.generations: int = generations
@@ -41,7 +42,7 @@ class GeneticAlgorithm:
             if generation % 100 == 0:
                 self.cached_fitness.clear()
 
-            parents = self.strategy_manager.select_parents(self.population, self.fitness_scores)
+            parents = self.strategy_manager.select_parents(self.population, self.fitness_scores, self.optimize_mode)
             offspring = self.strategy_manager.crossover(parents)
             mutated_population = self.strategy_manager.mutate(offspring, self.bounds)
             self.population = mutated_population
@@ -61,17 +62,18 @@ class GeneticAlgorithm:
             if self.evaluate_termination():
                 break
         
-        print("before binary search")
-        print(self.best_individual, self.func(self.best_individual))
+        #print("before binary search")
+        #print(self.best_individual, self.func(self.best_individual))
         
-        print("after binary search")
+        #print("after binary search")
         binary_search_equation = self.binary_search(self.best_individual)
-        print(binary_search_equation, self.func(binary_search_equation))
+        #print(binary_search_equation, self.func(binary_search_equation))
         
-        print("after hill climb")
-        hill_climbed_equation = self.hill_climb(self.best_individual)
-        print(hill_climbed_equation, self.func(hill_climbed_equation))
-        return self.best_individual
+        #print("after hill climb")
+        #hill_climbed_equation = self.hill_climb(self.best_individual)
+        #print(hill_climbed_equation, self.func(hill_climbed_equation))
+        #return self.best_individual
+        return binary_search_equation
 
     def update_best_equation(self) -> None:
         """
@@ -135,7 +137,7 @@ class GeneticAlgorithm:
 
     def sort_population_by_fitness(self, population: List[float], fitness_scores: List[float]) -> List[float]:
         paired_population = list(zip(fitness_scores, population))
-        sorted_population = sorted(paired_population, key=lambda x: x[0], reverse=True)
+        sorted_population = sorted(paired_population, key=lambda x: x[0], reverse=self.optimize_mode)
         return [individual for _, individual in sorted_population]
     
     def subscribe(self, subscriber: object) -> None:
@@ -207,7 +209,7 @@ class GeneticAlgorithm:
     def binary_search(self, individual : list) -> list:
 
         def bs(low, middle, high, individual: list, gene_index: int) -> list:
-            def optimize(individual: list, gene_index: int, value : float) -> float:
+            def evaluate(individual: list, gene_index: int, value : float) -> float:
                 individual[gene_index] = value
                 return self.func(individual)
             
@@ -218,14 +220,12 @@ class GeneticAlgorithm:
             new_low = (middle+low)/2
             new_high = (middle+high)/2
             
-            new_low_score = optimize(individual, gene_index, new_low)
-            new_high_score = optimize(individual, gene_index, new_high)
-
-            if new_low_score > new_high_score:
+            new_low_score = evaluate(individual, gene_index, new_low)
+            new_high_score = evaluate(individual, gene_index, new_high)
+            if (self.optimize_mode and new_low_score > new_high_score) or (not self.optimize_mode and new_low_score < new_high_score):
                 return bs(low, new_low, middle, individual, gene_index)
             else:
                 return bs(middle, new_high, high, individual, gene_index)
-        
         individual = copy.deepcopy(individual)
 
         for i in range(len(individual)):
@@ -250,7 +250,7 @@ class GeneticAlgorithm:
             away_from_decimal += 1
 
         step_size = 10 ** -away_from_decimal
-        print(f"Step Size: {step_size}")
+        #print(f"Step Size: {step_size}")
         return step_size
 
     #Magic Methods
