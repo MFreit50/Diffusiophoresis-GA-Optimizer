@@ -7,25 +7,22 @@ from abc import ABC, abstractmethod
 
 class SelectionStrategy(ABC):
     @abstractmethod
-    def select_parents(self, population, fitness_scores, optimize_mode) -> tuple[Equation, Equation]:
+    def select_parents(self, population, fitness_scores) -> tuple[Equation, Equation]:
         pass
 
 class TournamentSelection(SelectionStrategy):
-    def select_parents(self, population, fitness_scores, optimize_mode) -> tuple[Equation, Equation]:
+    def select_parents(self, population, fitness_scores) -> tuple[Equation, Equation]:
         tournament_size = 6
-        parent1, parent2 = self.tournament_selection(population, fitness_scores, tournament_size, optimize_mode)
+        parent1, parent2 = self.tournament_selection(population, fitness_scores, tournament_size)
         parent1 = copy.deepcopy(parent1)
         parent2 = copy.deepcopy(parent2)
         return parent1, parent2
 
-    def tournament_selection(self, population: list, fitness_scores: list, tournament_size: int, optimize_mode: bool) -> list:
+    def tournament_selection(self, population: list, fitness_scores: list, tournament_size: int) -> list:
         def tournament_select_parent():
             tournament_contestants_indices = random.sample(range(len(population)), tournament_size)
 
-            if optimize_mode == True: # Maximize
-                best_contestant_index = max(tournament_contestants_indices, key=lambda idx: fitness_scores[idx])
-            else:   # Minimize
-                best_contestant_index = min(tournament_contestants_indices, key=lambda idx: fitness_scores[idx])
+            best_contestant_index = min(tournament_contestants_indices, key=lambda idx: fitness_scores[idx])
 
             return population[best_contestant_index]
         
@@ -38,27 +35,25 @@ class TournamentSelection(SelectionStrategy):
         return parent1, parent2
 
 class RouletteSelection(SelectionStrategy):
-    def select_parents(self, population, fitness_scores, optimize_mode) -> tuple[Equation, Equation]:
-        parent1, parent2 = self.roulette_selection(population, fitness_scores, optimize_mode)
+    def select_parents(self, population, fitness_scores) -> tuple[Equation, Equation]:
+        parent1, parent2 = self.roulette_selection(population, fitness_scores)
         parent1 = copy.deepcopy(parent1)
         parent2 = copy.deepcopy(parent2)
         return parent1, parent2
 
-    def roulette_selection(self, population, fitness_scores, maximize=True) -> tuple[list, list]:
+    def roulette_selection(self, population, fitness_scores) -> tuple[list, list]:
         """
         Perform roulette wheel selection with handling for zero or uniform fitness scores.
         
         :param population: List of individuals in the population.
         :param fitness_scores: List of fitness scores corresponding to the population.
-        :param maximize: Boolean indicating if the GA is maximizing or minimizing.
         :return: Two selected parents.
         """
         epsilon = 1e-10  # Small constant to avoid division by zero
 
-        if not maximize:
-            # Invert fitness scores for minimization
-            max_fitness = max(fitness_scores)
-            fitness_scores = [max_fitness - fitness for fitness in fitness_scores]
+        # Invert fitness scores for minimization
+        max_fitness = max(fitness_scores)
+        fitness_scores = [max_fitness - fitness for fitness in fitness_scores]
         
         # Handle the case of zero or uniform fitness scores
         total_fitness = sum(fitness_scores)
