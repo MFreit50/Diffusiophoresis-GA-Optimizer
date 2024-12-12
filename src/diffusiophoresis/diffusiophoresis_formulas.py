@@ -244,7 +244,7 @@ class DiffusiophoresisFormulas:
         """
         residence = channel_length / mean_flow_velocity
         y = 0  # initial particle position
-        time = np.linspace(start=0, stop=residence, num=residence*2)             #Time vector (0 to residence seconds)
+        time = np.linspace(start=0, stop=residence, num=500)             #Time vector (0 to residence seconds)
 
         # Calculate particle position
         x_pos, y_pos = DiffusiophoresisFormulas._calculate_particle_position(channel_height,  mean_flow_velocity, diffusiophoretic_velocity, time, y)
